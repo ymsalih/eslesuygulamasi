@@ -7,11 +7,42 @@
 
 ## 1. Tek cümlede ürün
 
-**Her şehrin bir canlı meydanı var. İnsanlar orada konu açar, kayıt olmadan, şehirlerine özel takma adlarla anlık sohbet eder. Konular 24 saat yaşar, sonra silinir.**
+**Her şehrin konulu "şark köşeleri" var. Gelen herkes bir köşede bir mindere oturur, yanındakilerle sanki aynı odadaymış gibi anlık sohbet eder. Kayıt yok, takma adlar şehre özel, köşeler 24 saat yaşar.**
 
-Öneri slogan: *"Şehrin şu an ne konuşuyor?"*
+Öneri slogan: *"Gel otur, bir çay iç."*
 
-İsim için birkaç fikir (marka ve alan adı müsaitliği ayrıca kontrol edilmeli): **Meydan81**, **Hemşehri**, **Şehir Muhabbeti**, **81 Sohbet**.
+İsim için birkaç fikir (marka ve alan adı müsaitliği ayrıca kontrol edilmeli): **Şark Köşesi**, **Sedir**, **Minder**, **Muhabbet Köşesi**, **Meydan81**, **Hemşehri**.
+
+> **Prototip:** `prototype/sark-kosesi.html` dosyası tarayıcıda açılarak köşe listesi, köşeye oturma, konuşma balonları, çay ikramı ve filtre davranışı denenebilir (diğer kullanıcılar simülasyondur).
+
+---
+
+## 1A. Şark köşesi konsepti
+
+Her konu odası, görsel olarak bir **şark köşesi**dir: U şeklinde sedir, minderler, kilim, ortada sini üzerinde çaydanlık ve ince belli bardaklar, pencereden şehrin silüeti.
+
+| Özellik | Açıklama |
+|---|---|
+| **Minder = koltuk** | Her köşede **10 minder** var. Giren kişi boş bir mindere oturur (otomatik atanır, isterse boş bir mindere tıklayıp yer değiştirir) |
+| **Karakter** | Her oturan kişi, takma adı ve kendine özgü rengiyle basit bir karakter olarak görünür. Gerçek fotoğraf yok |
+| **Konuşma balonu** | Yazılan mesaj, kişinin başının üstünde birkaç saniye balon olarak görünür. Aynı anda yandaki sohbet panelinde kalıcı olarak akar |
+| **Yazıyor göstergesi** | Yazmakta olan kişinin başında "•••" balonu çıkar |
+| **Çay ikram et** | Bir kişinin adına dokunup ona çay ikram edilebilir. Bardak animasyonla ona gider ve sohbete "X, Y için çay koydu" yazılır. Sohbeti başlatmanın sıcak ve zararsız bir yolu |
+| **Kişi menüsü** | Çay ikram et · Bu kişiyi gizle (sadece kendi ekranında) · Bildir |
+| **Konu tabelası** | Köşenin konusu üst başlıkta yazar. Herkes aynı konu etrafında oturur |
+| **Şehir manzarası** | Pencereden o şehrin silüeti görünür (İzmir için Saat Kulesi, İstanbul için Galata vb.). Her il için basit bir silüet çizilir, Tüm Türkiye için genel bir manzara |
+| **Her köşede farklı kişiler** | Kişi aynı anda tek bir köşede oturur. Başka köşeye geçince öncekinden kalkar |
+| **Rastgele köşe** | "🎲 Rastgele bir köşeye otur" butonu, **boş minderi olan ve içinde en az 2 kişi bulunan** köşeler arasından birini seçer. Kimse boş bir odaya düşmez |
+| **Köşe dolarsa** | Aynı konu için otomatik olarak "2. köşe" açılır. Böylece kalabalık konular da 10 kişilik samimi gruplara bölünür |
+
+**Neden 10 kişi?**
+- 10 kişilik bir grupta herkes birbirini görür, sohbet takip edilebilir kalır. 150 kişilik bir odada mesajlar çok hızlı akar ve kaybolur.
+- Moderasyon kolaylaşır: kötü niyetli bir kişi en fazla 9 kişiyi etkiler ve bildirim eşikleri daha anlamlı olur.
+- Ekranda tüm minderler sığar, mobilde de okunabilir.
+
+**Mobil düzen:** Köşe sahnesi üstte (ekranın yaklaşık üçte biri), sohbet paneli altta. İsimler kısaltılır, dokununca tamamı görünür.
+
+**Teknik not:** Sahne SVG ve CSS ile çizilir, oyun motoru gerekmez. Minder konumları sabittir (koltuk numarası). Sunucu her kişiye bir koltuk numarası atar ve `seat:update` olayıyla herkese bildirir. Konuşma balonları zaten gelen `message:new` olayından üretilir, ek bir veri trafiği yoktur.
 
 ---
 
@@ -49,7 +80,7 @@ Türkiye
 |---|---|
 | **Meydan** | Bir şehrin (veya Tüm Türkiye'nin) ana sayfası. Canlı konuların listesi burada görünür |
 | **Genel Sohbet** | Her meydanda sürekli açık oda. Geçmiş tutulmaz, sadece son ~100 mesaj akar |
-| **Konu (oda)** | Bir kullanıcının açtığı başlıklı sohbet odası. Açıldıktan **24 saat** sonra veya **3 saat hiç mesaj gelmezse** kapanır ve silinir |
+| **Konu (oda) = şark köşesi** | Bir kullanıcının açtığı başlıklı, 10 minderli sohbet odası. Açıldıktan **24 saat** sonra veya **3 saat hiç mesaj gelmezse** kapanır ve silinir. Dolarsa aynı konuda yeni köşe açılır |
 | **Günün Konusu** | Her meydanda her sabah sistemin açtığı hazır konu (ör. "İzmirliler, boyozu neyle yersiniz?"). Boş meydan sorununu çözer, 81 il verisinden üretilir |
 | **Takma ad** | Şehrin bir özelliğinden üretilen geçici ad (bkz. ANALIZ.md bölüm 6) |
 
@@ -138,11 +169,11 @@ Ana sayfa
 | Konu | Kural |
 |---|---|
 | Mesaj uzunluğu | En fazla 300 karakter |
-| Mesaj hızı | Normalde 1 mesaj / 2 sn. Odada 30+ kişi varsa **yavaş mod** (1 mesaj / 5 sn) otomatik açılır |
+| Mesaj hızı | 1 mesaj / 2 sn. Genel Sohbet gibi kalabalık odalarda **yavaş mod** (1 mesaj / 5 sn) |
 | Konu açma | Oturum başına 30 dakikada 1 konu, günde en fazla 5 |
 | Yeni oturum | Onaydan sonra ilk **5 dakika** konu açamaz (spam ve bot engeli), Genel Sohbet'e yazabilir |
 | Başlık | 10–100 karakter, filtreden geçer, link ve kişisel bilgi içeremez |
-| Oda kapasitesi | 150 kişi. Dolunca "Bu konu dolu" uyarısı (ileride ikinci oda açılabilir) |
+| Köşe kapasitesi | **10 kişi** (10 minder). Dolunca aynı konuda otomatik yeni köşe açılır |
 | Medya | **Yok.** Sadece metin ve emoji (fotoğraf/video yok, link yok) |
 | Özel mesaj (DM) | **Yok.** Tacizin en çok yaşandığı kanal budur. İleride iki tarafın da onayıyla düşünülebilir |
 | Ömür | 24 saat veya 3 saat sessizlik, hangisi önce gelirse |
@@ -236,7 +267,12 @@ Mimari `ANALIZ.md` bölüm 4 ile aynıdır: **Next.js (web) + Node.js/Socket.IO 
 | S → İ | `square:topic_update` | Konu eklendi / güncellendi / kapandı |
 | İ → S | `topic:create` | `{ city, title, category }` |
 | İ → S | `room:join` / `room:leave` | `{ roomId }` |
-| S → İ | `room:state` | `{ you: { nickname, color }, members, lastMessages[50] }` |
+| S → İ | `room:state` | `{ you: { nickname, color, seat }, members: [{ nickname, color, seat }], lastMessages[50] }` |
+| İ → S | `seat:change` | `{ roomId, seat }`: boş bir mindere geç |
+| S → İ | `seat:update` | `{ nickname, seat \| null }`: biri oturdu, yer değiştirdi veya kalktı |
+| İ → S | `tea:offer` | `{ roomId, toNickname }`: çay ikram et (hız sınırlı) |
+| S → İ | `tea:offered` | `{ from, to }` |
+| İ → S | `room:random` | `{ city }`: sunucu, boş minderi olan ve en az 2 kişilik bir köşe seçer |
 | İ → S | `message:send` | `{ roomId, text, replyTo?, clientId }` |
 | S → İ | `message:new` | `{ id, nickname, color, text, replyTo?, ts, isOwner }` |
 | S → İ | `message:rejected` | `{ clientId, reason }` |
