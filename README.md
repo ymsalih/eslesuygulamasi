@@ -37,15 +37,18 @@ prototype/      Tek dosyalık tıklanabilir taslak
 
 ## Çalıştırma (geliştirme)
 
-Gerekenler: Node.js 20+, Docker (veya yerel PostgreSQL).
+Adım adım, kod bilgisi gerektirmeyen rehber: **[docs/KURULUM.md](docs/KURULUM.md)**
+
+Kısaca (Node.js 20+ gerekir):
 
 ```bash
 npm install
-cp .env.example .env            # SESSION_SECRET ve IP_ENCRYPTION_KEY'i değiştirin
-docker compose -f infra/docker-compose.yml up -d
-npm run db:migrate
+cp .env.example .env            # Windows: copy .env.example .env
 npm run dev                     # web: http://localhost:3000, gerçek zamanlı: http://localhost:4000
 ```
+
+Varsayılan olarak veritabanı gerekmez (kayıtlar geçici olarak bellekte tutulur). Kalıcı kayıt için:
+`docker compose -f infra/docker-compose.yml up -d`, `.env` içinde `DATABASE_URL` satırını aç, `npm run db:migrate`.
 
 Rastgele anahtar üretmek için: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 
@@ -65,6 +68,7 @@ npm run typecheck
 
 ## Belgeler
 
+- [Kurulum Rehberi](docs/KURULUM.md): kendi bilgisayarında çalıştırma
 - [Nihai Ürün Planı](docs/NIHAI_PLAN.md): şehir bazlı, konulu şark köşeleri
 - [Proje Analizi](docs/ANALIZ.md): KVKK ve 5651, mimari, takma ad, filtre, bildirim ayrıntıları
 - [Yasal Uyum Kontrol Listesi](docs/YASAL_KONTROL_LISTESI.md): KVKK, 5651, süreçler ve avukata sorulacak sorular

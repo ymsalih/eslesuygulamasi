@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace @sark/realtime & npm run dev --workspace @sark/web",
+    "dev": "concurrently -k -n sunucu,web -c yellow,cyan \"npm run dev --workspace @sark/realtime\" \"npm run dev --workspace @sark/web\"",
     "dev:web": "npm run dev --workspace @sark/web",
     "dev:realtime": "npm run dev --workspace @sark/realtime",
     "build": "npm run build --workspace @sark/realtime && npm run build --workspace @sark/web",
@@ -18,5 +18,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
   }
 }
