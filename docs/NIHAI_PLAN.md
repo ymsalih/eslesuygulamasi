@@ -35,6 +35,8 @@ Her konu odası, görsel olarak bir **şark köşesi**dir: U şeklinde sedir, mi
 | **Rastgele köşe** | "🎲 Rastgele bir köşeye otur" butonu, **boş minderi olan ve içinde en az 2 kişi bulunan** köşeler arasından birini seçer. Kimse boş bir odaya düşmez |
 | **Köşe dolarsa** | Aynı konu için otomatik olarak "2. köşe" açılır. Böylece kalabalık konular da 10 kişilik samimi gruplara bölünür |
 
+**Fon müziği:** Her köşede isteğe bağlı fon müziği ve kafe ortam sesi çalar. Gerçek şarkılar telif (MESAM/MSG vb. lisans) gerektirdiği için müzik tarayıcıda üretilir: saz benzeri tel sesi, şehre göre makam ve usul, def, kafe uğultusu, çay kaşığı şıngırtısı ve şehre göre deniz, martı, rüzgâr veya yağmur. Ezgi köşe kimliğinden türetildiği için her köşenin kendi ezgisi vardır. Müzik varsayılan olarak kapalıdır, kullanıcı açar ve ses düzeyini ayarlar; tercih tarayıcıda saklanır. İleride lisanslı veya telifsiz (yazılı lisanslı) kayıtlar eklenebilir.
+
 **Neden 10 kişi?**
 - 10 kişilik bir grupta herkes birbirini görür, sohbet takip edilebilir kalır. 150 kişilik bir odada mesajlar çok hızlı akar ve kaybolur.
 - Moderasyon kolaylaşır: kötü niyetli bir kişi en fazla 9 kişiyi etkiler ve bildirim eşikleri daha anlamlı olur.
