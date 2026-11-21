@@ -30,7 +30,7 @@
   header .logo span { color: var(--accent); }
   header .city {
     margin-left: auto; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
-    font-size: 14px; background: #fff;
+    font: inherit; font-size: 14px; background: #fff; color: var(--ink); cursor: pointer;
   }
   header .online { font-size: 13px; color: var(--muted); }
   button {
@@ -151,7 +151,15 @@
 <header>
   <div class="logo">şark<span>köşesi</span></div>
   <div class="online" id="onlineCount">🟢 214 kişi çevrimiçi</div>
-  <div class="city">📍 İzmir ▾</div>
+  <select class="city" id="citySelect" aria-label="Şehir seç">
+    <option value="turkiye">🇹🇷 Tüm Türkiye</option>
+    <option value="istanbul">📍 İstanbul</option>
+    <option value="ankara">📍 Ankara</option>
+    <option value="izmir" selected>📍 İzmir</option>
+    <option value="trabzon">📍 Trabzon</option>
+    <option value="nevsehir">📍 Nevşehir</option>
+    <option value="gaziantep">📍 Gaziantep</option>
+  </select>
 </header>
 <div class="proto-note">Prototip: Diğer kullanıcılar simülasyondur. Gerçek eşleşme, filtre ve bildirim sunucuda çalışacaktır.</div>
 
@@ -207,30 +215,171 @@ const SEATS = [
 const CAPACITY = SEATS.length;
 const COLORS = ["#c0392b","#2e86ab","#8e44ad","#27ae60","#d35400","#16a085","#b7950b","#7f5539","#e84393","#34495e"];
 const SKIN = ["#f1c8a0","#e0ac7e","#c68b59","#f5d6b4","#d9a074"];
-const NAMES = ["Boyozsever","Kumru Ustası","Kordon Yürüyüşçüsü","Gevrek Sever","Saat Kulesi","Alsancak Martısı",
-  "Midyeci","Kemeraltı Gezgini","Bergama Tulumu","Çeşme Rüzgârı","Şevketi Bostan","Asansör Manzarası","Lokma Tatlısı","Karşıyaka Vapuru"];
-
-const ROOMS = [
-  { id: 1, cat: "🎶 Etkinlik", topic: "Bu akşam Kordon'da ne yapılır?", n: 6 },
-  { id: 2, cat: "🍽️ Yeme-İçme", topic: "Boyozun yanına ne yakışır: yumurta mı çay mı?", n: 8 },
-  { id: 3, cat: "⚽ Spor", topic: "Göztepe mi Karşıyaka mı, bu sezon kim önde?", n: 10 },
-  { id: 4, cat: "💬 Muhabbet", topic: "Genel muhabbet, gel otur bir çay iç", n: 7 },
-  { id: 5, cat: "🎓 Okul", topic: "Final haftası, kim ne çalışıyor?", n: 3 },
-  { id: 6, cat: "🚋 Ulaşım", topic: "Metro yine mi arızalı?", n: 4 },
-  { id: 7, cat: "💭 Dertleşme", topic: "Bugün nasıl geçti, anlat bakalım", n: 5 },
-  { id: 8, cat: "🎬 Dizi-Film", topic: "Bu hafta ne izledin, öner bakalım", n: 2 },
-];
-
-const LINES = {
-  1: ["Saat 9'da Alsancak'ta canlı müzik varmış", "Kordon'da oturup çekirdek çitlemek bile yeter bence", "Hava güzel, dışarı çıkılır", "Konak'a kadar yürüyelim mi diyorsunuz 😄", "Geçen hafta çok kalabalıktı ama"],
-  2: ["Boyoz + haşlanmış yumurta + çay, tartışılmaz 😌", "Ben ayranla yiyorum, kızmayın", "Kumruyu unutmayalım ama", "Sabah 7'de sıcak boyoz bulursan şanslısın", "Gevrek mi simit mi tartışmasına girmeyelim 😂"],
-  3: ["Bu sezon defans çok iyi", "Derbi günü şehir ikiye bölünüyor", "Stat yine dolar", "Transfer döneminde ne yapacaklar bakalım", "Ben sadece maç özetlerini izliyorum"],
-  4: ["Selam herkese 👋", "Çaylar benden ☕", "Hava ne güzel bugün", "Kim nereden katıldı?", "Ben de yeni geldim, merhaba"],
-  5: ["Matematik finali yarın, yardım 😩", "Kütüphane 24 saat açık mı?", "Bu dönem bitsin artık", "Not ortalamasını kurtarmam lazım"],
-  6: ["Sabah 20 dk bekledim", "Vapur daha keyifli bence", "İZBAN'a da bir şey diyen yok", "Bisiklete geçmeyi düşünüyorum"],
-  7: ["Bugün biraz yorucuydu ama iyi", "İşte toplantı üstüne toplantı", "Akşam bir çay iyi gelir", "Sizi dinlemek bile iyi geldi"],
-  8: ["Yeni çıkan diziyi bitirdim, finali şaşırttı", "Komedi önerisi olan?", "Hafta sonu sinemaya gideceğim", "Belgesel seven var mı?"],
+/* ---------- Şehir temaları: manzara, renkler, sinideki ikram, takma adlar, konular ---------- */
+const SIMIT = `<circle cx="-46" cy="26" r="7" fill="none" stroke="#b5732f" stroke-width="4"/><circle cx="42" cy="27" r="7" fill="none" stroke="#b5732f" stroke-width="4"/>`;
+const CITIES = {
+  izmir: {
+    name: "İzmir", gen: "İzmir'in", sky: ["#f5a35c", "#fbd7a0"], kilim: ["#a43d2a", "#c4593c", "#e3b45a"], plates: ["#2e6f8e", "#8e2f2a"],
+    skyline: `
+      <circle cx="98" cy="46" r="14" fill="#fff3c4"/>
+      <path d="M0 110 L0 92 L18 92 L18 80 L32 80 L32 96 L46 96 L46 74 L52 66 L58 74 L58 96 L76 96 L76 86 L92 86 L92 98 L110 98 L110 84 L124 84 L124 100 L140 100 L140 134 L0 134 Z" fill="#7a5a49" opacity=".85"/>
+      <g fill="#5a3d31"><rect x="62" y="56" width="16" height="50"/><rect x="58" y="50" width="24" height="8"/><path d="M60 50 L70 36 L80 50 Z"/></g>
+      <rect x="0" y="112" width="140" height="22" fill="#4f7ea8" opacity=".75"/>`,
+    tray: `<g fill="#d9a441" stroke="#a8742a" stroke-width="1.5"><ellipse cx="-46" cy="26" rx="9" ry="5"/><ellipse cx="42" cy="27" rx="9" ry="5"/></g>
+           <path d="M-50 26 q4 -3 8 0 M38 27 q4 -3 8 0" stroke="#a8742a" fill="none"/>`,
+    trayName: "boyoz",
+    names: ["Boyozsever","Kumru Ustası","Kordon Yürüyüşçüsü","Gevrek Sever","Saat Kulesi","Alsancak Martısı","Midyeci","Kemeraltı Gezgini","Bergama Tulumu","Çeşme Rüzgârı","Şevketi Bostan","Asansör Manzarası","Lokma Tatlısı","Karşıyaka Vapuru"],
+    rooms: [
+      { cat: "🎶 Etkinlik", topic: "Bu akşam Kordon'da ne yapılır?", lines: ["Saat 9'da Alsancak'ta canlı müzik varmış", "Kordon'da oturup çekirdek çitlemek bile yeter bence", "Hava güzel, dışarı çıkılır", "Geçen hafta çok kalabalıktı ama"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Boyozun yanına ne yakışır: yumurta mı çay mı?", lines: ["Boyoz + haşlanmış yumurta + çay, tartışılmaz 😌", "Ben ayranla yiyorum, kızmayın", "Kumruyu unutmayalım ama", "Gevrek mi simit mi tartışmasına girmeyelim 😂"] },
+      { cat: "⚽ Spor", topic: "Göztepe mi Karşıyaka mı, bu sezon kim önde?", lines: ["Bu sezon defans çok iyi", "Derbi günü şehir ikiye bölünüyor", "Stat yine dolar", "Ben sadece maç özetlerini izliyorum"] },
+    ],
+  },
+  istanbul: {
+    name: "İstanbul", gen: "İstanbul'un", sky: ["#f29b6b", "#fcd8b0"], kilim: ["#7a2233", "#a8384a", "#d9b45a"], plates: ["#1f5f8b", "#b03a48"],
+    skyline: `
+      <circle cx="30" cy="40" r="12" fill="#fff1c9"/>
+      <path d="M0 104 L0 96 L60 96 L60 100 L88 100 L88 92 L140 92 L140 134 L0 134 Z" fill="#6c4a4a" opacity=".8"/>
+      <g fill="#4a3030">
+        <path d="M14 100 Q30 76 46 100 Z"/><path d="M8 100 Q14 90 20 100 Z"/><path d="M40 100 Q46 90 52 100 Z"/>
+        <rect x="6" y="66" width="3" height="34"/><path d="M5 66 L7.5 56 L10 66 Z"/>
+        <rect x="51" y="66" width="3" height="34"/><path d="M50 66 L52.5 56 L55 66 Z"/>
+        <rect x="98" y="56" width="16" height="44"/><rect x="96" y="54" width="20" height="4"/><path d="M96 54 L106 34 L116 54 Z"/>
+      </g>
+      <rect x="0" y="110" width="140" height="24" fill="#3f6f99" opacity=".85"/>
+      <path d="M50 118 L82 118 L78 124 L54 124 Z" fill="#fff"/><rect x="58" y="113" width="14" height="5" fill="#fff"/><rect x="62" y="109" width="3" height="4" fill="#c0392b"/>`,
+    tray: SIMIT, trayName: "simit",
+    names: ["Galata Martısı","Vapur Yolcusu","Simitçi","Boğaz Esintisi","Kadıköy Rıhtımı","Balat Merdiveni","Eminönü Balıkçısı","Kız Kulesi","Tramvay Yolcusu","Moda Sahili","Çay Bahçesi","Adalar Bisikleti"],
+    rooms: [
+      { cat: "🚢 Ulaşım", topic: "Vapurda simit mi, poğaça mı?", lines: ["Vapurda simit + çay klasik", "Martılara simit atmayın diyorlar ama 😄", "Kadıköy vapuru en güzeli", "Poğaça da fena değil açıkçası"] },
+      { cat: "🎶 Etkinlik", topic: "Hafta sonu Kadıköy'de ne yapılır?", lines: ["Moda sahilinde oturmak bile yeter", "Bahariye'de bir konser varmış", "Çarşı tarafı çok kalabalık oluyor", "Sahaf gezmeyi seven var mı?"] },
+      { cat: "🏙️ Gündem", topic: "Trafik yine kilit, siz nasıl gidiyorsunuz?", lines: ["Metrobüs tek kurtuluş", "Ben artık vapurla gidiyorum", "Köprü trafiği bitmiyor", "Evden çalışmak ilaç gibi 😅"] },
+    ],
+  },
+  ankara: {
+    name: "Ankara", gen: "Ankara'nın", sky: ["#8fb6d9", "#dbe9f3"], kilim: ["#6b3a2a", "#8f5a3c", "#d6c08a"], plates: ["#3a5f7a", "#8a4a2a"],
+    skyline: `
+      <circle cx="28" cy="36" r="11" fill="#fffbe6"/>
+      <path d="M0 100 L0 90 L14 90 L14 78 L26 78 L26 94 L80 94 L80 82 L92 82 L92 96 L118 96 L118 86 L140 86 L140 134 L0 134 Z" fill="#6f7d8c" opacity=".8"/>
+      <g fill="#4a5563">
+        <path d="M34 104 Q50 78 66 104 Z"/>
+        <rect x="30" y="62" width="3" height="42"/><path d="M29 62 L31.5 52 L34 62 Z"/>
+        <rect x="67" y="62" width="3" height="42"/><path d="M66 62 L68.5 52 L71 62 Z"/>
+        <rect x="101" y="52" width="6" height="52"/><circle cx="104" cy="47" r="9"/><rect x="103" y="30" width="2" height="9"/>
+      </g>
+      <rect x="0" y="104" width="140" height="30" fill="#8d7a5f"/>`,
+    tray: SIMIT, trayName: "Ankara simidi",
+    names: ["Ankara Kedisi","Tiftik Keçisi","Kuğulu Park","Hamamönü Gezgini","Atakule Manzarası","Kızılay Yolcusu","Ankara Simidi","Gençlik Parkı","Tunalı Yürüyüşçüsü","Eymir Bisikletçisi","Ulus Çarşısı"],
+    rooms: [
+      { cat: "🌳 Şehir", topic: "Kuğulu Park'ta kuğular hâlâ yerinde mi?", lines: ["Geçen gün baktım, yerindeler 🦢", "Kışın da kalıyorlar mı merak ediyorum", "Tunalı'da yürüyüp parka uğramak klasik", "Hafta sonu çok kalabalık oluyor"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Ankara'da en iyi simit nerede?", lines: ["Ulus tarafı bence", "Sıcak simit + beyaz peynir yeter", "Ankara simidi ayrı bir şey", "Sabah erken gidince daha güzel"] },
+      { cat: "🎶 Etkinlik", topic: "Hafta sonu Ankara'da ne yapılır?", lines: ["Eymir'de bisiklet", "Hamamönü'nde kahve içilir", "Konser takvimine bakan var mı?", "Ben müzeleri gezmeyi seviyorum"] },
+    ],
+  },
+  trabzon: {
+    name: "Trabzon", gen: "Trabzon'un", sky: ["#9cc7c9", "#e2efe9"], kilim: ["#2f5a3a", "#4c7d4f", "#e3c05a"], plates: ["#2f6b3f", "#3a5f8a"],
+    skyline: `
+      <path d="M0 80 L30 48 L55 72 L80 38 L110 70 L140 50 L140 134 L0 134 Z" fill="#2f6b3f"/>
+      <rect x="0" y="66" width="140" height="10" fill="#fff" opacity=".35"/>
+      <path d="M0 98 L25 84 L50 96 L80 80 L110 94 L140 84 L140 134 L0 134 Z" fill="#3f8a4f"/>
+      <ellipse cx="70" cy="122" rx="66" ry="12" fill="#5fa3b8"/>
+      <g fill="#e9eef0"><path d="M58 106 Q64 98 70 106 Z"/><rect x="72" y="92" width="2.5" height="14"/><path d="M71.5 92 L73.25 85 L75 92 Z"/></g>`,
+    tray: `<g fill="#b8c4cc" stroke="#7d8b94" stroke-width="1">
+             <path d="M-56 24 Q-48 20 -40 24 Q-48 28 -56 24 Z"/><path d="M-40 24 L-35 21 L-35 27 Z"/>
+             <path d="M30 28 Q38 24 46 28 Q38 32 30 28 Z"/><path d="M46 28 L51 25 L51 31 Z"/>
+             <path d="M-20 30 Q-12 26 -4 30 Q-12 34 -20 30 Z"/><path d="M-4 30 L1 27 L1 33 Z"/></g>`,
+    trayName: "hamsi",
+    names: ["Uzungöl Esintisi","Kemençeci","Hamsi Sever","Sümela Yolcusu","Karadeniz Dalgası","Akçaabat Köftesi","Yayla Çayı","Fındık Toplayıcısı","Horon Ustası","Boztepe Manzarası","Zigana Rüzgârı"],
+    rooms: [
+      { cat: "🍽️ Yeme-İçme", topic: "Hamsi en güzel nasıl pişer?", lines: ["Tava, mısır unuyla, tartışmasız", "Buğulama da çok güzel", "Hamsili pilavı unutmayın", "Bu sene hamsi biraz geç geldi"] },
+      { cat: "🏞️ Gezi", topic: "Uzungöl mü Sümela mı, ilk nereye gidilir?", lines: ["Sabah Sümela, akşam Uzungöl", "Uzungöl sisli olunca bambaşka", "Yaylaya çıkmadan olmaz", "Hafta içi gidin, daha sakin"] },
+      { cat: "⚽ Spor", topic: "Trabzonspor bu sezon nasıl gidiyor?", lines: ["Taraftar her zaman arkasında", "Orta saha toparlarsa iyi olur", "Stat yine full", "Deplasmanlar zor geçiyor"] },
+    ],
+  },
+  nevsehir: {
+    name: "Nevşehir", gen: "Nevşehir'in", sky: ["#f2a7a0", "#fde2c4"], kilim: ["#9a5b3a", "#c0825a", "#f0d6a0"], plates: ["#b5542e", "#6b7f3a"],
+    skyline: `
+      <g><circle cx="34" cy="34" r="9" fill="#e74c3c"/><rect x="32" y="45" width="4" height="4" fill="#6b3f22"/><line x1="29" y1="40" x2="32" y2="45" stroke="#6b3f22"/><line x1="39" y1="40" x2="36" y2="45" stroke="#6b3f22"/></g>
+      <g><circle cx="80" cy="24" r="7" fill="#f1c40f"/><rect x="78.5" y="32" width="3" height="3" fill="#6b3f22"/></g>
+      <g><circle cx="110" cy="44" r="8" fill="#2e86ab"/><rect x="108" y="53" width="4" height="4" fill="#6b3f22"/></g>
+      <g><circle cx="60" cy="56" r="5" fill="#8e44ad"/><rect x="59" y="62" width="2" height="2" fill="#6b3f22"/></g>
+      <path d="M0 112 Q70 96 140 112 L140 134 L0 134 Z" fill="#c9a074"/>
+      <g fill="#d9b48a" stroke="#a07a55" stroke-width="1">
+        <path d="M14 134 L22 82 L30 134 Z"/><path d="M40 134 L50 74 L60 134 Z"/><path d="M84 134 L94 78 L104 134 Z"/><path d="M110 134 L118 88 L126 134 Z"/>
+      </g>
+      <g fill="#8a6545"><ellipse cx="22" cy="82" rx="8" ry="4"/><ellipse cx="50" cy="74" rx="9" ry="5"/><ellipse cx="94" cy="78" rx="9" ry="5"/><ellipse cx="118" cy="88" rx="7" ry="4"/></g>`,
+    tray: `<g transform="translate(-46 22)"><path d="M-7 -7 Q-11 4 -5 9 L5 9 Q11 4 7 -7 Z" fill="#b55a2e" stroke="#7a3518"/><rect x="-6" y="-9" width="12" height="3" rx="1" fill="#8a4422"/></g>
+           <g transform="translate(42 23)"><path d="M-6 -6 Q-9 3 -4 7 L4 7 Q9 3 6 -6 Z" fill="#c26a3a" stroke="#7a3518"/></g>`,
+    trayName: "çömlek",
+    names: ["Peri Bacası","Balon Pilotu","Avanos Çömlekçisi","Göreme Gezgini","Ürgüp Bağı","Testi Kebabı","Uçhisar Kalesi","Kızılçukur Gün Batımı","Derinkuyu Kâşifi","Kapadokya Atı"],
+    rooms: [
+      { cat: "🎈 Gezi", topic: "Balonları sabah izlemek için en iyi tepe?", lines: ["Gün doğumunda Göreme tepesi", "Uçhisar'dan da çok güzel görünüyor", "Rüzgâr varsa uçmuyorlar, dikkat", "Bir kere bile görmek yeter, büyüleyici"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Testi kebabı mı, çömlekte fasulye mi?", lines: ["Testiyi kırma anı ayrı keyif", "Avanos'ta çömlek fasulye efsane", "İkisini de deneyin derim", "Sonuna bir de kayısı tatlısı"] },
+      { cat: "🏙️ Gündem", topic: "Turist sezonu bitti mi, şehir nasıl?", lines: ["Kışın çok sakin oluyor", "Kar yağınca peri bacaları masal gibi", "Esnaf yeni sezonu bekliyor", "Ben sakin hâlini daha çok seviyorum"] },
+    ],
+  },
+  gaziantep: {
+    name: "Gaziantep", gen: "Gaziantep'in", sky: ["#f4b860", "#fbe3b0"], kilim: ["#7a2a2a", "#9c3d2e", "#a8c45a"], plates: ["#6a9a3a", "#9c3d2e"],
+    skyline: `
+      <circle cx="104" cy="34" r="12" fill="#fff3c4"/>
+      <path d="M0 110 Q70 70 140 110 L140 134 L0 134 Z" fill="#9c7b55"/>
+      <g fill="#6e4f35">
+        <rect x="42" y="74" width="56" height="20"/>
+        <rect x="36" y="64" width="14" height="30"/><rect x="90" y="64" width="14" height="30"/><rect x="63" y="58" width="14" height="36"/>
+        ${[36,40,44,48,90,94,98,102,63,67,71,75].map(x => `<rect x="${x}" y="${x >= 63 && x <= 75 ? 54 : 60}" width="2.5" height="4"/>`).join("")}
+      </g>
+      <g fill="#5d7f3a"><circle cx="14" cy="112" r="7"/><circle cx="126" cy="112" r="7"/><rect x="13" y="114" width="2" height="8" fill="#5a3d31"/><rect x="125" y="114" width="2" height="8" fill="#5a3d31"/></g>`,
+    tray: `<g stroke="#9c6a1c" stroke-width="1" fill="#e0a83c">
+             <path d="M-52 26 L-46 21 L-40 26 L-46 31 Z"/><path d="M-40 26 L-34 21 L-28 26 L-34 31 Z"/>
+             <path d="M30 27 L36 22 L42 27 L36 32 Z"/><path d="M42 27 L48 22 L54 27 L48 32 Z"/></g>
+           <g fill="#6a9a3a"><circle cx="-46" cy="26" r="1.6"/><circle cx="-34" cy="26" r="1.6"/><circle cx="36" cy="27" r="1.6"/><circle cx="48" cy="27" r="1.6"/></g>`,
+    trayName: "baklava",
+    names: ["Fıstık Ağacı","Baklavacı","Zeugma Mozaiği","Bakırcılar Çarşısı","Beyran Ustası","Katmerci","Gaziantep Kalesi","Menengiç Kahvesi","Yuvalama Sever","Kutnu Kumaşı","Antep Bağları"],
+    rooms: [
+      { cat: "🍽️ Yeme-İçme", topic: "Sabah kahvaltısı: katmer mi beyran mı?", lines: ["Sabah beyran, öğlen katmer 😄", "Katmerin yanına bir de çay", "Beyran için erken gitmek lazım", "Antep'te diyet olmaz"] },
+      { cat: "🏛️ Gezi", topic: "Zeugma Müzesi'ni gezmeyen kaldı mı?", lines: ["Çingene Kızı mozaiği büyüleyici", "En az iki saat ayırın", "Okul gezisiyle gitmiştim", "Bakırcılar Çarşısı'na da uğrayın"] },
+      { cat: "☕ Muhabbet", topic: "Menengiç kahvesini seven var mı?", lines: ["Sütlü menengiç favorim", "İlk seferde şaşırtıyor ama sonra bağımlılık yapıyor", "Kalenin oradaki kahveciler güzel", "Ben Türk kahvesinden şaşmam"] },
+    ],
+  },
+  turkiye: {
+    name: "Tüm Türkiye", gen: "Tüm Türkiye'nin", sky: ["#7fb3d5", "#e8f1f7"], kilim: ["#8f2a24", "#b5452f", "#e3b45a"], plates: ["#c0392b", "#2e6f8e"],
+    skyline: `
+      <circle cx="104" cy="32" r="11" fill="#fffbe6"/>
+      <path d="M0 96 L22 70 L44 90 L70 60 L96 88 L120 72 L140 84 L140 134 L0 134 Z" fill="#7f9a6b"/>
+      <path d="M0 106 Q35 94 70 104 Q105 114 140 100 L140 134 L0 134 Z" fill="#c9b27a"/>
+      <rect x="0" y="118" width="140" height="16" fill="#4f7ea8" opacity=".8"/>`,
+    tray: SIMIT, trayName: "simit",
+    names: null, // tüm şehirlerin takma adlarından rastgele
+    rooms: [
+      { cat: "🗺️ Gezi", topic: "Türkiye'de mutlaka görülmesi gereken 3 yer?", lines: ["Kapadokya, Sümela, Pamukkale", "Doğu Ekspresi ile Kars'a gitmek", "Ege kıyıları bambaşka", "Ben Mardin derim"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Memleketinin en abartılan yemeği hangisi?", lines: ["Bizimkini kimse abartamaz 😄", "Her şehrin kendi kebabı var zaten", "Bence en iyisi annemin yemekleri", "Bu konu kavga çıkarır, dikkat 😂"] },
+      { cat: "⚽ Spor", topic: "Bu sezon şampiyonluk yarışı kimin?", lines: ["Son haftaya kadar belli olmaz", "Anadolu takımları sürpriz yapabilir", "Derbiler belirleyecek", "Ben milli maçları daha çok seviyorum"] },
+    ],
+  },
 };
+const GENERIC_ROOMS = [
+  { cat: "💬 Muhabbet", topic: "Genel muhabbet, gel otur bir çay iç", lines: ["Selam herkese 👋", "Çaylar benden ☕", "Hava ne güzel bugün", "Ben de yeni geldim, merhaba"] },
+  { cat: "🎓 Okul", topic: "Final haftası, kim ne çalışıyor?", lines: ["Matematik finali yarın, yardım 😩", "Kütüphane 24 saat açık mı?", "Bu dönem bitsin artık", "Not ortalamasını kurtarmam lazım"] },
+  { cat: "💭 Dertleşme", topic: "Bugün nasıl geçti, anlat bakalım", lines: ["Bugün biraz yorucuydu ama iyi", "İşte toplantı üstüne toplantı", "Akşam bir çay iyi gelir", "Sizi dinlemek bile iyi geldi"] },
+  { cat: "🎬 Dizi-Film", topic: "Bu hafta ne izledin, öner bakalım", lines: ["Yeni çıkan diziyi bitirdim, finali şaşırttı", "Komedi önerisi olan?", "Hafta sonu sinemaya gideceğim", "Belgesel seven var mı?"] },
+];
+CITIES.turkiye.names = Object.values(CITIES).flatMap(c => c.names || []);
+
+let cityKey = "izmir";
+let CITY = CITIES[cityKey];
+let NAMES = CITY.names;
+let ROOMS = [];
+const roomCache = {};
+let roomSeq = 1;
+function setCity(key) {
+  cityKey = key; CITY = CITIES[key]; NAMES = CITY.names;
+  if (!roomCache[key]) {
+    roomCache[key] = [...CITY.rooms, ...GENERIC_ROOMS].map(r => ({ ...r, id: roomSeq++, n: 2 + Math.floor(Math.random() * 8) }));
+  }
+  ROOMS = roomCache[key];
+  document.querySelector("#lobby h1").textContent = `${CITY.gen} köşeleri`;
+  $("onlineCount").textContent = `🟢 ${key === "turkiye" ? 2140 + Math.floor(Math.random() * 300) : 60 + Math.floor(Math.random() * 260)} kişi çevrimiçi`;
+}
 
 /* Basit filtre (sunucudaki filtrenin küçük bir örneği) */
 const BLOCKED = ["salak", "aptal", "gerizekalı", "mal"];
@@ -300,9 +449,9 @@ function drawScene() {
   svg.innerHTML = `
     <defs>
       <pattern id="kilim" width="40" height="40" patternUnits="userSpaceOnUse">
-        <rect width="40" height="40" fill="#a43d2a"/>
-        <path d="M20 4 L36 20 L20 36 L4 20 Z" fill="#c4593c"/>
-        <path d="M20 12 L28 20 L20 28 L12 20 Z" fill="#e3b45a"/>
+        <rect width="40" height="40" fill="${CITY.kilim[0]}"/>
+        <path d="M20 4 L36 20 L20 36 L4 20 Z" fill="${CITY.kilim[1]}"/>
+        <path d="M20 12 L28 20 L20 28 L12 20 Z" fill="${CITY.kilim[2]}"/>
         <circle cx="20" cy="20" r="2.5" fill="#3b2a1e"/>
       </pattern>
       <pattern id="wall" width="28" height="28" patternUnits="userSpaceOnUse">
@@ -310,7 +459,7 @@ function drawScene() {
         <path d="M14 6 L18 14 L14 22 L10 14 Z" fill="#e2caa2"/>
       </pattern>
       <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#f5a35c"/><stop offset="1" stop-color="#fbd7a0"/>
+        <stop offset="0" stop-color="${CITY.sky[0]}"/><stop offset="1" stop-color="${CITY.sky[1]}"/>
       </linearGradient>
       <radialGradient id="tray" cx=".45" cy=".4" r=".7">
         <stop offset="0" stop-color="#f0cf7a"/><stop offset="1" stop-color="#b8862e"/>
@@ -327,24 +476,18 @@ function drawScene() {
     <!-- pencere ve şehir manzarası -->
     <g transform="translate(330 28)">
       <rect x="-8" y="-8" width="156" height="150" rx="70" fill="#6b3f22"/>
+      <clipPath id="win"><rect x="0" y="0" width="140" height="134" rx="64"/></clipPath>
       <rect x="0" y="0" width="140" height="134" rx="64" fill="url(#sky)"/>
-      <circle cx="98" cy="46" r="14" fill="#fff3c4"/>
-      <path d="M0 110 L0 92 L18 92 L18 80 L32 80 L32 96 L46 96 L46 74 L52 66 L58 74 L58 96 L76 96 L76 86 L92 86 L92 98 L110 98 L110 84 L124 84 L124 100 L140 100 L140 134 L0 134 Z" fill="#7a5a49" opacity=".85"/>
-      <!-- saat kulesi silüeti -->
-      <g fill="#5a3d31">
-        <rect x="62" y="56" width="16" height="50"/><rect x="58" y="50" width="24" height="8"/>
-        <path d="M60 50 L70 36 L80 50 Z"/>
-      </g>
-      <rect x="0" y="112" width="140" height="22" fill="#4f7ea8" opacity=".75"/>
+      <g clip-path="url(#win)">${CITY.skyline}</g>
       <line x1="70" y1="0" x2="70" y2="134" stroke="#6b3f22" stroke-width="5"/>
       <line x1="0" y1="70" x2="140" y2="70" stroke="#6b3f22" stroke-width="5"/>
     </g>
 
     <!-- duvar süsleri: tabaklar ve fener -->
     <g>
-      <circle cx="150" cy="80" r="26" fill="#2e6f8e" stroke="#e3b45a" stroke-width="4"/>
+      <circle cx="150" cy="80" r="26" fill="${CITY.plates[0]}" stroke="#e3b45a" stroke-width="4"/>
       <circle cx="150" cy="80" r="12" fill="#f2e2c4"/>
-      <circle cx="650" cy="80" r="26" fill="#8e2f2a" stroke="#e3b45a" stroke-width="4"/>
+      <circle cx="650" cy="80" r="26" fill="${CITY.plates[1]}" stroke="#e3b45a" stroke-width="4"/>
       <circle cx="650" cy="80" r="12" fill="#f2e2c4"/>
       <circle cx="245" cy="60" r="40" fill="url(#glow)"/>
       <line x1="245" y1="0" x2="245" y2="34" stroke="#5a3d31" stroke-width="2"/>
@@ -391,8 +534,8 @@ function drawScene() {
           <ellipse cx="0" cy="12" rx="9" ry="3" fill="#f4f1ec" stroke="#b8b0a4"/>
           <path d="M-6 -10 Q-2 0 -5 10 L5 10 Q2 0 6 -10 Z" fill="#b5401f" stroke="#7a2a12" stroke-width="1" opacity=".9"/>
         </g>`).join("")}
-      <!-- şekerlik -->
-      <circle cx="-10" cy="22" r="7" fill="#fff" stroke="#c9973f" stroke-width="2"/>
+      <!-- şehre özgü ikram -->
+      ${CITY.tray}
     </g>
 
     <g id="people"></g>
@@ -541,7 +684,7 @@ function enterRoom(r) {
   $("lobby").style.display = "none";
   $("room").classList.add("active");
   $("roomTopic").textContent = r.topic;
-  $("roomMeta").textContent = `${r.cat} · İzmir · 24 saat sonra kapanır`;
+  $("roomMeta").textContent = `${r.cat} · ${CITY.name} · sinide ${CITY.trayName} · 24 saat sonra kapanır`;
   $("meLine").textContent = `Bu köşede adın: ${me.name}. Bir kişinin adına dokunup ona çay ikram edebilirsin.`;
   renderPeople();
   log(`"${escapeHtml(r.topic)}" köşesine oturdun. Konu dışına çıkmamaya ve kurallara uymaya özen göster 🙂`, "msg sys");
@@ -581,7 +724,7 @@ function startBots() {
       showBubble(p, "", true);
       setTimeout(() => {
         if (!people.includes(p)) return;
-        const lines = LINES[room.id] || LINES[4];
+        const lines = room.lines || GENERIC_ROOMS[0].lines;
         say(p, lines[Math.floor(Math.random() * lines.length)]);
       }, 1200 + Math.random() * 800);
     }
@@ -616,12 +759,18 @@ $("newRoomBtn").onclick = () => {
   if (t.length < 10 || t.length > 100) return alert("Konu 10–100 karakter olmalı.");
   const err = checkMessage(t);
   if (err) return alert(err);
-  const r = { id: Date.now(), cat: "💬 Muhabbet", topic: t, n: 0 };
+  const r = { id: roomSeq++, cat: "💬 Muhabbet", topic: t, n: 0, lines: GENERIC_ROOMS[0].lines };
   ROOMS.unshift(r);
   enterRoom(r);
 };
 document.addEventListener("click", e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); });
 
+$("citySelect").onchange = e => {
+  if ($("room").classList.contains("active")) leaveRoom();
+  setCity(e.target.value);
+  renderLobby();
+};
+setCity("izmir");
 renderLobby();
 </script>
 </body>

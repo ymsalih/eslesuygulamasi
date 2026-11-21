@@ -30,7 +30,7 @@ Her konu odası, görsel olarak bir **şark köşesi**dir: U şeklinde sedir, mi
 | **Çay ikram et** | Bir kişinin adına dokunup ona çay ikram edilebilir. Bardak animasyonla ona gider ve sohbete "X, Y için çay koydu" yazılır. Sohbeti başlatmanın sıcak ve zararsız bir yolu |
 | **Kişi menüsü** | Çay ikram et · Bu kişiyi gizle (sadece kendi ekranında) · Bildir |
 | **Konu tabelası** | Köşenin konusu üst başlıkta yazar. Herkes aynı konu etrafında oturur |
-| **Şehir manzarası** | Pencereden o şehrin silüeti görünür (İzmir için Saat Kulesi, İstanbul için Galata vb.). Her il için basit bir silüet çizilir, Tüm Türkiye için genel bir manzara |
+| **Şehre özgü köşe** | Her ilin köşesi farklı görünür: **pencereden şehrin manzarası** (İzmir'de Saat Kulesi ve deniz, İstanbul'da Galata ve vapur, Nevşehir'de balonlar ve peri bacaları...), **kilimin renkleri**, **duvar tabakları** ve **sinideki yöresel ikram** (İzmir'de boyoz, İstanbul'da simit, Trabzon'da hamsi, Gaziantep'te baklava, Nevşehir'de çömlek). Takma adlar ve hazır konular da o şehre özeldir. Tüm Türkiye'nin kendi genel manzarası vardır |
 | **Her köşede farklı kişiler** | Kişi aynı anda tek bir köşede oturur. Başka köşeye geçince öncekinden kalkar |
 | **Rastgele köşe** | "🎲 Rastgele bir köşeye otur" butonu, **boş minderi olan ve içinde en az 2 kişi bulunan** köşeler arasından birini seçer. Kimse boş bir odaya düşmez |
 | **Köşe dolarsa** | Aynı konu için otomatik olarak "2. köşe" açılır. Böylece kalabalık konular da 10 kişilik samimi gruplara bölünür |
@@ -39,6 +39,8 @@ Her konu odası, görsel olarak bir **şark köşesi**dir: U şeklinde sedir, mi
 - 10 kişilik bir grupta herkes birbirini görür, sohbet takip edilebilir kalır. 150 kişilik bir odada mesajlar çok hızlı akar ve kaybolur.
 - Moderasyon kolaylaşır: kötü niyetli bir kişi en fazla 9 kişiyi etkiler ve bildirim eşikleri daha anlamlı olur.
 - Ekranda tüm minderler sığar, mobilde de okunabilir.
+
+**81 il için tema verisi:** Her il için `packages/cities/` altında tek bir kayıt tutulur: manzara çizimi (SVG), gökyüzü ve kilim renkleri, sinideki ikram, takma ad öğeleri ve hazır konular. Prototipte 6 il + Tüm Türkiye hazır. Kalan iller aşamalı eklenir. Teması henüz hazır olmayan iller, bölgesine uygun genel bir manzarayla (Ege kıyısı, Karadeniz yaylası, İç Anadolu bozkırı, Doğu dağları vb.) açılır.
 
 **Mobil düzen:** Köşe sahnesi üstte (ekranın yaklaşık üçte biri), sohbet paneli altta. İsimler kısaltılır, dokununca tamamı görünür.
 
