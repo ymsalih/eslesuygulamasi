@@ -319,8 +319,7 @@ export class RoomManager {
     await this.saveReport({ room, reporterSid: sid, reportedSid: msg.sid, messageId, reason, note, auto: false });
 
     if (!msg.hidden && reporters.size >= HIDE_MESSAGE_REPORTS) {
-      msg.hidden = true;
-      this.emitter.toRoom(room.id, "message:hidden", { id: msg.id });
+      this.hide(room, msg);
       if (msg.sid) await this.strike(msg.sid, room);
     }
     return { ok: true };
@@ -353,10 +352,25 @@ export class RoomManager {
     for (const room of this.rooms.values()) room.messages = room.messages.filter((m) => now - m.ts < ROOM_TTL_MS);
   }
 
-  /** Moderatör kararıyla veya testlerde kullanılır. */
-  closeRoom(room: Room | string, reason: "expired" | "idle" | "moderation") {
+  /** Moderatör kararıyla bir mesajı gizler. Köşe veya mesaj artık yoksa `false`. */
+  hideMessage(roomId: string, messageId: string): boolean {
+    const room = this.rooms.get(roomId);
+    const msg = room?.messages.find((m) => m.id === messageId && !m.system);
+    if (!room || !msg) return false;
+    if (!msg.hidden) this.hide(room, msg);
+    return true;
+  }
+
+  /** Moderatör kararıyla kişiyi köşeden çıkarır ve bağlantısını keser (ban sonrası). */
+  kick(sid: string, text: string) {
+    this.leave(sid);
+    this.emitter.kick(sid, text);
+  }
+
+  /** Moderatör kararıyla veya testlerde kullanılır. Köşe yoksa `false`. */
+  closeRoom(room: Room | string, reason: "expired" | "idle" | "moderation"): boolean {
     const r = typeof room === "string" ? this.rooms.get(room) : room;
-    if (!r) return;
+    if (!r) return false;
     this.emitter.toRoom(r.id, "room:closed", { reason });
     for (const sid of [...r.members.keys()]) {
       this.sidRoom.delete(sid);
@@ -364,6 +378,7 @@ export class RoomManager {
     }
     this.rooms.delete(r.id);
     this.emitter.lobbyChanged(r.city);
+    return true;
   }
 
   /* ---------------- İç yardımcılar ---------------- */
@@ -437,6 +452,13 @@ export class RoomManager {
 
   private currentRoom(sid: string): Room | undefined {
     return this.rooms.get(this.sidRoom.get(sid) ?? "");
+  }
+
+  /** Mesajı gizler; ona verilen yanıtlardaki alıntıyı da temizler. */
+  private hide(room: Room, msg: StoredMessage) {
+    msg.hidden = true;
+    for (const m of room.messages) if (m.replyTo?.id === msg.id) m.replyTo = { ...m.replyTo, text: "" };
+    this.emitter.toRoom(room.id, "message:hidden", { id: msg.id });
   }
 
   private pushMessage(room: Room, msg: StoredMessage) {

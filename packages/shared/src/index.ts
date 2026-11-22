@@ -6,3 +6,4 @@ export * from "./topics";
 export * from "./constants";
 export * from "./events";
 export * from "./scene";
+export * from "./admin";

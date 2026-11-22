@@ -91,6 +91,59 @@ Varsayılan olarak onay kayıtları, bildirimler ve trafik logları **geçici ol
    npm run dev
    ```
 
+## 8. Yönetim paneli (moderatörler için)
+
+Panelde kullanıcı bildirimlerini, banları, içerik kaldırma taleplerini ve yasaklı kelimeleri yönetirsin.
+Panel kayıtları veritabanından okuduğu için **önce 7. adımı (veritabanı) yapmış olmalısın**. Veritabanı yoksa panel
+"DATABASE_URL gerekli" uyarısı gösterir.
+
+### Bilgisayarında denemek
+
+1. `.env` dosyası `.env.example`'dan kopyalandıysa yönetici ayarları zaten içindedir (`ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, `ADMIN_SECRET`).
+   Eski bir `.env` kullanıyorsan bu üç satırı `.env.example`'dan kopyala.
+2. `npm run db:migrate` çalıştır (panelin yeni tablosu, denetim günlüğü, oluşturulur), sonra `npm run dev`.
+3. Tarayıcıda **http://localhost:3000/yonetim** adresini aç.
+4. Giriş bilgileri (sadece bilgisayarda denemek için):
+   - Kullanıcı adı: `yonetici`
+   - Parola: `yerel-deneme-parolasi`
+
+Panelde neler var:
+| Bölüm | Ne yapılır |
+|---|---|
+| **Özet** | Açık bildirim, geciken kaldırma talebi ve aktif ban sayıları |
+| **Bildirimler** | Önce yüksek öncelikli olanlar (reşit olmama, tehdit), sonra eskiden yeniye. Her bildirimde o anki son 40 mesaj görünür. Kapat, mesajı kaldır, köşeyi kapat, kullanıcıyı banla, yasal saklamaya al |
+| **Kaldırma talepleri** | 5651 md. 9 başvuruları. Her talebin 24 saat sayacı var, geciken kırmızı görünür. Sonuç ve not yazarak kapatılır |
+| **Banlar** | Aktif banlar, elle ban ekleme, ban kaldırma |
+| **Yasaklı kelimeler** | Filtreye kelime ekle/sil. Sohbet sunucusu hemen uygular |
+| **Denetim günlüğü** | Kim, ne zaman, ne yaptı. "Haberdar olunca kaldırdık" ispatıdır, panelden silinemez |
+
+Mesajı kaldırma, köşeyi kapatma ve banlanan kişiyi köşeden çıkarma **canlı** yapılır: web sitesi sohbet sunucusuna
+gizli bir anahtarla (`ADMIN_SECRET`) haber verir. Sohbet sunucusu kapalıysa karar yine kayda geçer, panel bunu uyarıyla söyler.
+
+### Canlı sitede (mutlaka yap)
+
+Örnek parola ve örnek anahtar canlı sitede **çalışmaz**. Kendi parolanı üret:
+
+```
+npm run yonetici:parola
+```
+
+Parolanı iki kez yazarsın (ekranda görünmez, en az 12 karakter). Çıkan iki satırı (`ADMIN_PASSWORD_HASH=...` ve `ADMIN_SECRET=...`)
+sunucudaki `.env` dosyasına, eski satırların yerine yapıştır. İstersen `ADMIN_USERNAME`'i de değiştir. Sonra siteyi yeniden başlat.
+
+- Parolanın kendisi hiçbir yere kaydedilmez, sadece özeti (hash) saklanır. Parolayı unutursan aynı komutla yenisini üret.
+- `ADMIN_SECRET` web sitesi ve sohbet sunucusunda **aynı** olmalı (ikisi aynı `.env`'i okuyorsa sorun yok).
+- Web sitesi sohbet sunucusuna farklı bir iç adresten ulaşıyorsa `.env`'e `REALTIME_INTERNAL_URL=http://...` ekle.
+- Yönetici girişi 8 saat geçerlidir. Aynı adresten 15 dakikada 5 yanlış parola girilirse giriş 15 dakika kilitlenir.
+- Yönetici çerezi kullanıcıların sohbet çerezinden ayrıdır ve sadece `/yonetim` sayfalarına gönderilir.
+
+### Henüz yapılmadı (yapılacaklar)
+
+- [ ] **İki aşamalı doğrulama (2FA):** Şimdilik giriş sadece kullanıcı adı + parola ile. Canlıya çıkmadan önce eklenmeli (KVKK md. 12, yönetici 2FA).
+- [ ] **Birden fazla moderatör hesabı ve roller:** Şimdilik tek yönetici hesabı var; denetim günlüğünde hepsi bu adla görünür.
+- [ ] Giriş hız sınırı tek sunucu belleğinde tutulur; birden fazla web sunucusuna geçince Redis'e taşınmalı.
+- [ ] Kapatılan bir köşe başlığını "incelemede"den onaylama (konu inceleme kuyruğu).
+
 ## Sık karşılaşılan sorunlar
 
 | Sorun | Çözüm |
@@ -101,6 +154,8 @@ Varsayılan olarak onay kayıtları, bildirimler ve trafik logları **geçici ol
 | "Sunucu yapılandırması eksik" | Kodun eski sürümü. `git pull` ile güncelle, `npm run dev`'i durdurup (`Ctrl + C`) yeniden başlat |
 | Ana sayfaya geri atıyor | Onay çerezi yok veya silinmiş; onay ekranını tekrar doldur |
 | `DATABASE_URL` hatası | Docker çalışmıyorsa `.env` içindeki `DATABASE_URL` satırının başına tekrar `#` koy |
+| Panelde "Yönetim paneli kapalı" | `.env` içinde `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, `ADMIN_SECRET` satırları eksik. `.env.example`'dan kopyala |
+| Panelde "Sohbet sunucusuna ulaşılamadı" | `npm run dev` ile sohbet sunucusu da açık olmalı; iki tarafta `ADMIN_SECRET` aynı olmalı |
 
 ## Kodun en son halini almak
 

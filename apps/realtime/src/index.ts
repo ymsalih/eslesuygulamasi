@@ -1,3 +1,4 @@
+import { EXAMPLE_ADMIN_SECRET } from "@sark/shared/server";
 import { config } from "./config";
 import { MemoryRepo, PgRepo, type Repo } from "./repo";
 import { createRealtime } from "./server";
@@ -36,7 +37,19 @@ if (config.databaseUrl) {
   repo = new MemoryRepo();
 }
 
-const rt = createRealtime({ repo, sessionSecret: config.sessionSecret, webOrigins: config.webOrigins, trustProxy: config.trustProxy });
+// Yönetim paneli anahtarı: yoksa panel canlı köşelere müdahale edemez (kayıtlar yine de işlenir)
+let adminSecret = config.adminSecret;
+if (adminSecret && adminSecret.length < 32) {
+  console.warn("UYARI: ADMIN_SECRET 32 karakterden kısa, yönetim paneli bağlantısı kapalı.");
+  adminSecret = undefined;
+} else if (adminSecret === EXAMPLE_ADMIN_SECRET && config.production) {
+  console.warn("UYARI: ADMIN_SECRET örnek dosyadaki değer. Canlı sitede kabul edilmez, yönetim paneli bağlantısı kapalı.");
+  adminSecret = undefined;
+} else if (!adminSecret) {
+  console.warn("BİLGİ: ADMIN_SECRET yok, yönetim paneli canlı köşelerde mesaj gizleyemez / köşe kapatamaz.");
+}
+
+const rt = createRealtime({ repo, sessionSecret: config.sessionSecret, webOrigins: config.webOrigins, trustProxy: config.trustProxy, adminSecret });
 rt.http.listen(config.port, () => console.log(`Gerçek zamanlı sunucu: http://localhost:${config.port}`));
 
 // Saklama süresi dolan kayıtları günde bir sil

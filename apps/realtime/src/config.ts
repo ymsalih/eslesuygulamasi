@@ -35,6 +35,8 @@ export const config = {
   sessionSecret: process.env.SESSION_SECRET || (isDev ? DEV_SESSION_SECRET : undefined),
   usingDevSecret: !process.env.SESSION_SECRET && isDev,
   databaseUrl: process.env.DATABASE_URL,
+  /** Yönetim panelinin iç uç noktayı (/internal/admin) çağırırken kullandığı anahtarın kaynağı */
+  adminSecret: process.env.ADMIN_SECRET,
   ipKey: process.env.IP_ENCRYPTION_KEY,
   /** Ters vekil (nginx vb.) arkasında gerçek IP için X-Forwarded-For'a güven */
   trustProxy: process.env.TRUST_PROXY === "1",
