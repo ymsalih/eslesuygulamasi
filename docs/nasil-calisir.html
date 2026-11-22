@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Şark Köşesi nasıl çalışır?</title>
+<style>
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f6efe4; color: #3b2a1e; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .sub { color: #8a7462; margin: 0 0 18px; }
+  svg { width: 100%; height: auto; display: block; background: #fffaf2; border: 1px solid #e6d7c3; border-radius: 16px; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 16px; }
+  .step { background: #fffaf2; border: 1px solid #e6d7c3; border-radius: 12px; padding: 12px; font-size: 14px; line-height: 1.45; }
+  .step b { display: block; margin-bottom: 4px; }
+  .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #b5452f; color: #fff; font-size: 12px; font-weight: 700; margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Şark Köşesi nasıl çalışır?</h1>
+  <p class="sub">Siteyi bir kafe gibi düşün: 1 müşteri, 3 çalışan, 1 defter.</p>
+
+  <svg viewBox="0 0 1080 560" role="img" aria-label="Sitenin parçaları ve bir mesajın yolculuğu">
+    <defs>
+      <marker id="ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 Z" fill="#b5452f" />
+      </marker>
+      <marker id="ok2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 Z" fill="#2e6f8e" />
+      </marker>
+    </defs>
+
+    <!-- Müşteriler -->
+    <g>
+      <rect x="30" y="60" width="200" height="130" rx="14" fill="#fff" stroke="#c9b79f" stroke-width="2" />
+      <text x="130" y="95" text-anchor="middle" font-size="34">👩</text>
+      <text x="130" y="130" text-anchor="middle" font-size="17" font-weight="700">Ayşe'nin tarayıcısı</text>
+      <text x="130" y="152" text-anchor="middle" font-size="13" fill="#8a7462">Chrome, telefon...</text>
+      <text x="130" y="172" text-anchor="middle" font-size="13" fill="#8a7462">cebinde: 🎟️ onay bileti</text>
+
+      <rect x="30" y="370" width="200" height="130" rx="14" fill="#fff" stroke="#c9b79f" stroke-width="2" />
+      <text x="130" y="405" text-anchor="middle" font-size="34">👨</text>
+      <text x="130" y="440" text-anchor="middle" font-size="17" font-weight="700">Mehmet'in tarayıcısı</text>
+      <text x="130" y="462" text-anchor="middle" font-size="13" fill="#8a7462">aynı köşede oturuyor</text>
+    </g>
+
+    <g transform="translate(80 0)">
+    <!-- Kafe çerçevesi -->
+    <rect x="300" y="20" width="670" height="520" rx="20" fill="#f9f1e4" stroke="#b5452f" stroke-width="2" stroke-dasharray="8 6" />
+    <text x="635" y="48" text-anchor="middle" font-size="15" fill="#b5452f" font-weight="700">SUNUCU (internetteki, hiç kapanmayan bilgisayar)</text>
+
+    <!-- Vitrin -->
+    <rect x="340" y="70" width="270" height="140" rx="14" fill="#fff" stroke="#c9973f" stroke-width="2" />
+    <text x="475" y="102" text-anchor="middle" font-size="26">🪟</text>
+    <text x="475" y="132" text-anchor="middle" font-size="17" font-weight="700">1. Vitrin</text>
+    <text x="475" y="154" text-anchor="middle" font-size="13" fill="#8a7462">Sayfaları gösterir, onay bileti keser</text>
+    <text x="475" y="174" text-anchor="middle" font-size="13" fill="#8a7462">(Next.js · port 3000)</text>
+    <text x="475" y="196" text-anchor="middle" font-size="12" fill="#b5452f">"mektup" gibi: sor → cevap al</text>
+
+    <!-- Garson -->
+    <rect x="340" y="300" width="270" height="200" rx="14" fill="#fff" stroke="#c9973f" stroke-width="2" />
+    <text x="475" y="334" text-anchor="middle" font-size="26">🧑‍🍳</text>
+    <text x="475" y="364" text-anchor="middle" font-size="17" font-weight="700">2. Garson</text>
+    <text x="475" y="386" text-anchor="middle" font-size="13" fill="#8a7462">Kim hangi köşede, hangi minderde</text>
+    <text x="475" y="404" text-anchor="middle" font-size="13" fill="#8a7462">Mesajları anında masaya taşır</text>
+    <text x="475" y="424" text-anchor="middle" font-size="13" fill="#8a7462">(Socket.IO · port 4000)</text>
+    <rect x="370" y="440" width="210" height="44" rx="10" fill="#fbe9e3" stroke="#e8b9a9" />
+    <text x="475" y="458" text-anchor="middle" font-size="13" font-weight="700">3. Kapı görevlisi 🛡️</text>
+    <text x="475" y="476" text-anchor="middle" font-size="12" fill="#8a7462">küfür · telefon · link · hız</text>
+
+    <!-- Defter -->
+    <rect x="690" y="300" width="250" height="200" rx="14" fill="#fff" stroke="#c9973f" stroke-width="2" />
+    <text x="815" y="334" text-anchor="middle" font-size="26">📒</text>
+    <text x="815" y="364" text-anchor="middle" font-size="17" font-weight="700">4. Defter</text>
+    <text x="815" y="386" text-anchor="middle" font-size="13" fill="#8a7462">Yasanın istediği kayıtlar:</text>
+    <text x="815" y="404" text-anchor="middle" font-size="13" fill="#8a7462">onaylar · giriş-çıkış · şikâyetler</text>
+    <text x="815" y="424" text-anchor="middle" font-size="13" fill="#8a7462">(PostgreSQL veritabanı)</text>
+    <text x="815" y="450" text-anchor="middle" font-size="12" fill="#b5452f">Mesajlar deftere YAZILMAZ</text>
+    <text x="815" y="468" text-anchor="middle" font-size="12" fill="#b5452f">(köşe kapanınca silinir)</text>
+
+    <!-- Arka ofis -->
+    <rect x="690" y="70" width="250" height="140" rx="14" fill="#fff" stroke="#c9b79f" stroke-width="2" stroke-dasharray="5 4" />
+    <text x="815" y="102" text-anchor="middle" font-size="26">🗂️</text>
+    <text x="815" y="132" text-anchor="middle" font-size="17" font-weight="700">5. Arka ofis</text>
+    <text x="815" y="154" text-anchor="middle" font-size="13" fill="#8a7462">Sen şikâyetlere bakarsın</text>
+    <text x="815" y="174" text-anchor="middle" font-size="13" fill="#8a7462">(yönetim paneli)</text>
+    <text x="815" y="196" text-anchor="middle" font-size="12" fill="#b5452f">HENÜZ YAPILMADI</text>
+
+    </g>
+    <!-- Oklar -->
+    <path d="M230 110 L415 120" stroke="#2e6f8e" stroke-width="2.5" fill="none" marker-end="url(#ok2)" />
+    <text x="242" y="98" font-size="12" fill="#2e6f8e" font-weight="700">① sayfa + onay</text>
+
+    <path d="M230 160 C 300 220, 360 330, 415 360" stroke="#b5452f" stroke-width="3" fill="none" marker-end="url(#ok)" />
+    <text x="40" y="250" font-size="13" fill="#b5452f" font-weight="700">② açık telefon hattı</text>
+    <text x="40" y="268" font-size="13" fill="#b5452f">Ayşe "Selam" yazdı →</text>
+
+    <path d="M415 470 C 330 470, 290 440, 235 435" stroke="#b5452f" stroke-width="3" fill="none" marker-end="url(#ok)" />
+    <text x="244" y="520" font-size="12" fill="#b5452f" font-weight="700">③ anında Mehmet'e</text>
+
+    <g transform="translate(80 0)">
+    <path d="M610 400 L 685 400" stroke="#8a7462" stroke-width="2" fill="none" marker-end="url(#ok2)" />
+    <text x="618" y="390" font-size="11" fill="#8a7462">sadece</text>
+    <text x="618" y="418" font-size="11" fill="#8a7462">şikâyet</text>
+
+    <path d="M475 210 L 475 295" stroke="#8a7462" stroke-width="2" fill="none" marker-end="url(#ok2)" />
+    <text x="482" y="258" font-size="11" fill="#8a7462">bileti garson da tanır</text>
+
+    <path d="M815 295 L 815 215" stroke="#8a7462" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#ok2)" />
+    </g>
+  </svg>
+
+  <div class="steps">
+    <div class="step"><b><span class="n">1</span>Vitrin</b>Ayşe siteyi açınca sayfaları gösterir. Ayşe kutucukları işaretleyince ona mühürlü bir <b style="display:inline">onay bileti</b> (çerez) verir.</div>
+    <div class="step"><b><span class="n">2</span>Garson</b>Ayşe köşeye oturunca onunla açık bir telefon hattı kurar. Kim nerede oturuyor bilir; yazılanı anında köşedeki herkese taşır.</div>
+    <div class="step"><b><span class="n">3</span>Kapı görevlisi</b>Garsonun yanında durur. Küfürlü, telefon numaralı veya çok hızlı mesajı geri çevirir; kimseye gitmez.</div>
+    <div class="step"><b><span class="n">4</span>Defter</b>Sadece yasanın istediğini yazar: kim onay verdi, kim ne zaman girdi-çıktı (IP şifreli), hangi köşe şikâyet edildi.</div>
+    <div class="step"><b><span class="n">5</span>Arka ofis</b>Defterdeki şikâyetleri senin görüp karar verdiğin yer. Henüz yapılmadı; sıradaki iş bu.</div>
+  </div>
+</div>
+</body>
+</html>

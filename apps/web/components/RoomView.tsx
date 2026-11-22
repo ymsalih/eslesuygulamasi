@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  MAKAMS, SCENE_H, SCENE_W, SEATS, USULS, buildSceneSvg, moderateMessage, themeFor,
+  MAKAMS, SCENE_H, SCENE_W, SEATS, USULS, buildSceneSvg, themeFor,
   type ChatMessage, type Member, type ReportReason, type RoomState,
 } from "@sark/shared";
 import { call, getSocket } from "@/lib/realtime";
@@ -146,11 +146,8 @@ export default function RoomView({ city, cityName, state, log, setLog, ambience,
     e?.preventDefault();
     const t = text.trim();
     if (!t) return;
-    const pre = moderateMessage(t);
-    if (!pre.ok) {
-      setLog((l) => [...l, { kind: "warn", text: `⚠️ ${pre.message}` }]);
-      return;
-    }
+    // Filtre kontrolü bilerek sadece sunucuda: uygunsuz denemeler sunucuda sayılır,
+    // 5 dakikada 5 denemede susturma ve öncesindeki uyarı ancak böyle çalışır.
     stopTyping();
     const r = await call(socket, "message:send", { text: t, replyToId: replyTo?.id, clientId: String(Date.now()) });
     if (r.ok) {

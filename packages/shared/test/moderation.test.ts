@@ -16,6 +16,7 @@ describe("küfür filtresi", () => {
   it.each([
     "sen bir salaksın", "AMK ya", "aq", "siktir git", "s.i.k.t.i.r", "s i k t i r", "0r0spu", "ŞEREFSİZ herif",
     "gerizekalı mısın", "aptalca konuşma", "pezevenk", "orooospu", "amına", "siktiğimin",
+    "mk ya", "MK", "sktr git", "orspu", "orosbu çocuğu", "puşt", "kahbe", "avradını", "ananı sik", "a.n.a.n.ı s.i.k",
   ])("engeller: %s", (t) => {
     const r = blocked(t);
     expect(r.ok).toBe(false);
@@ -25,7 +26,7 @@ describe("küfür filtresi", () => {
   it.each([
     "Bugün çok sıkıntılı bir gün geçirdim", "Sıkıcı bir ders", "Trafikte sıkıştık", "Sıkı dur",
     "amin", "Amine Hanım çok iyi", "Malzeme listesi", "mal sahibi", "I got it", "Ameliyat oldum geçmiş olsun",
-    "Ananı özledin mi?", "Kasımpaşa", "Pamukkale çok güzel", "ambulans geçti", "Bu çok sıkıntı",
+    "Ananı özledin mi?", "Ananı ara bir", "Canımı sıktı", "Sıkışık trafik", "Kasımpaşa", "Pamukkale çok güzel", "ambulans geçti", "Bu çok sıkıntı",
     "sikke koleksiyonu", "Göztepe", "Alsancak", "Tasarım", "aptallık etmeyelim derken bile",
   ])("izin verir: %s", (t) => {
     const r = blocked(t);

@@ -67,11 +67,23 @@ interface Limits {
   reports: number[];
   strikes: number[];
   touchedAt: number;
+  /** Kişinin son görülen IP özeti (otomatik banı IP'ye de bağlamak için) */
+  ipHash: string | null;
 }
 
 const MAX_STORED_MESSAGES = 200;
 const NICKNAME_KEEP_MS = 30 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
+/** 5 dakika içinde bu kadar filtre ihlali olursa kişi susturulur. */
+const MUTE_AFTER_REJECTS = 5;
+const MUTE_WINDOW_MS = 5 * 60 * 1000;
+const MUTE_MS = 10 * 60 * 1000;
+/**
+ * Otomatik banın IP özetine bağlanan kısmının en uzun süresi. Türkiye'de mobil hatlarda çok sayıda kişi
+ * aynı IP'yi paylaşabilir; masum kişiler uzun süre engellenmesin diye IP banı kısa tutulur.
+ * Oturum banı tam süre geçerlidir. IP banı, çerezi silip yeniden onay vererek banı hemen atlatmayı engeller.
+ */
+const IP_BAN_MAX_MS = 60 * 60 * 1000;
 
 const id = (n = 10) => randomBytes(n).toString("base64url").slice(0, n);
 
@@ -225,18 +237,24 @@ export class RoomManager {
     if (!room || !me) return fail("Önce bir köşeye otur.");
     const now = this.now();
     const l = this.limitsFor(session.sid);
+    l.ipHash = session.ipHash;
     if (l.mutedUntil > now) return fail(`Çok sayıda uygunsuz mesaj nedeniyle ${Math.ceil((l.mutedUntil - now) / 60000)} dakika yazamazsın.`, "muted");
     if (now - l.lastMessageAt < MESSAGE_INTERVAL_MS) return fail("Biraz yavaş, mesajlar arasında 2 saniye bekle.", "rate_limit");
     if (typeof text !== "string") return fail("Geçersiz mesaj.");
 
     const mod = moderateMessage(text, this.bannedWords);
     if (!mod.ok) {
-      l.rejects = l.rejects.filter((t) => now - t < 5 * 60 * 1000);
+      l.rejects = l.rejects.filter((t) => now - t < MUTE_WINDOW_MS);
       l.rejects.push(now);
-      if (l.rejects.length >= 5) {
-        l.mutedUntil = now + 10 * 60 * 1000;
+      const minutes = MUTE_MS / 60000;
+      if (l.rejects.length >= MUTE_AFTER_REJECTS) {
+        l.mutedUntil = now + MUTE_MS;
         l.rejects = [];
+        return fail(`${mod.message} Çok sayıda uygunsuz mesaj gönderdiğin için ${minutes} dakika yazamazsın.`, "muted");
       }
+      // Susturmadan önce son iki denemede uyar
+      const left = MUTE_AFTER_REJECTS - l.rejects.length;
+      if (left <= 2) return fail(`${mod.message} Dikkat: ${left} uygunsuz mesaj daha gönderirsen ${minutes} dakika susturulacaksın.`, mod.reason);
       return fail(mod.message!, mod.reason);
     }
     l.lastMessageAt = now;
@@ -451,7 +469,7 @@ export class RoomManager {
   private limitsFor(sid: string): Limits {
     let l = this.limits.get(sid);
     if (!l) {
-      l = { lastMessageAt: 0, lastTeaAt: 0, rejects: [], mutedUntil: 0, topics: [], reports: [], strikes: [], touchedAt: 0 };
+      l = { lastMessageAt: 0, lastTeaAt: 0, rejects: [], mutedUntil: 0, topics: [], reports: [], strikes: [], touchedAt: 0, ipHash: null };
       this.limits.set(sid, l);
     }
     l.touchedAt = this.now();
@@ -476,7 +494,12 @@ export class RoomManager {
     const n = l.strikes.length;
     if (n === 3 || n >= 5) {
       const hours = n >= 5 ? 24 : 1;
-      await this.repo.addBan({ sid, ipHash: null, reason: `Otomatik: 24 saatte ${n} mesajı bildirimlerle gizlendi (${room.city})`, until: new Date(now + hours * 3600000), createdBy: "system" });
+      const reason = `Otomatik: 24 saatte ${n} mesajı bildirimlerle gizlendi (${room.city})`;
+      await this.repo.addBan({ sid, ipHash: null, reason, until: new Date(now + hours * 3600000), createdBy: "system" });
+      // Çerezi silip yeniden onay vererek hemen geri dönmeyi engelle (kısa süreli IP banı)
+      if (l.ipHash) {
+        await this.repo.addBan({ sid: null, ipHash: l.ipHash, reason, until: new Date(now + Math.min(hours * 3600000, IP_BAN_MAX_MS)), createdBy: "system" });
+      }
       this.emitter.kick(sid, `Topluluk kurallarını ihlal eden mesajlar nedeniyle ${hours} saat uzaklaştırıldın.`);
       this.leave(sid);
     }
