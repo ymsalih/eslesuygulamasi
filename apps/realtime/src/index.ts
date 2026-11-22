@@ -8,6 +8,23 @@ if (!config.sessionSecret || config.sessionSecret.length < 32) {
 }
 if (config.usingDevSecret) console.warn("BİLGİ: .env bulunamadı, yerel deneme anahtarı kullanılıyor (sadece bilgisayarda denemek için).");
 
+// 5651 trafik loglarındaki IP'ler bu anahtarla şifrelenir: 64 karakterlik hex (32 bayt) olmalı.
+// Örnek dosyadaki sıfırlardan oluşan anahtar canlı sitede kabul edilmez (şifreleme anlamsız kalır).
+if (config.databaseUrl || config.production) {
+  const key = config.ipKey ?? "";
+  if (!/^[0-9a-fA-F]{64}$/.test(key)) {
+    console.error("IP_ENCRYPTION_KEY 64 karakterlik hex olmalı. Üretmek için: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+    process.exit(1);
+  }
+  if (/^0+$/.test(key)) {
+    if (config.production) {
+      console.error("IP_ENCRYPTION_KEY örnek dosyadaki sıfır anahtar. Canlı sitede rastgele bir anahtar üretip .env dosyasına yazın.");
+      process.exit(1);
+    }
+    console.warn("UYARI: IP_ENCRYPTION_KEY örnek dosyadaki sıfır anahtar (sadece bilgisayarda denemek için kabul edilir).");
+  }
+}
+
 let repo: Repo;
 if (config.databaseUrl) {
   repo = new PgRepo(config.databaseUrl, config.ipKey);

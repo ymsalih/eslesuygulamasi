@@ -17,10 +17,16 @@ export function db(): pg.Pool | null {
   return globalThis.__sarkPool;
 }
 
+/**
+ * İstemcinin IP adresi. X-Forwarded-For / X-Real-IP başlıklarını tarayıcı da gönderebilir (uydurulabilir),
+ * bu yüzden sadece ters vekil (nginx) arkasında, TRUST_PROXY=1 iken bunlara güvenilir.
+ */
 export function clientIp(headers: Headers): string {
   if (process.env.TRUST_PROXY === "1") {
     const fwd = headers.get("x-forwarded-for");
     if (fwd) return fwd.split(",")[0].trim();
+    const real = headers.get("x-real-ip");
+    if (real) return real.trim();
   }
-  return headers.get("x-real-ip") ?? "0.0.0.0";
+  return "0.0.0.0";
 }
