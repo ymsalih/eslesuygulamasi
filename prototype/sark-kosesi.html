@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Şark Köşesi: Prototip</title>
+<style>
+  :root {
+    --bg: #f6efe4;
+    --ink: #3b2a1e;
+    --muted: #8a7462;
+    --card: #fffaf2;
+    --line: #e6d7c3;
+    --accent: #b5452f;
+    --accent-ink: #fff;
+    --gold: #c9973f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--card);
+  }
+  header .logo { font-weight: 800; font-size: 20px; letter-spacing: -.3px; }
+  header .logo span { color: var(--accent); }
+  header .city {
+    margin-left: auto; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+    font: inherit; font-size: 14px; background: #fff; color: var(--ink); cursor: pointer;
+  }
+  header .online { font-size: 13px; color: var(--muted); }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff;
+    color: var(--ink); padding: 8px 14px; border-radius: 10px;
+  }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  button.primary:hover { filter: brightness(1.05); }
+  .proto-note {
+    font-size: 12px; color: var(--muted); padding: 6px 20px; background: #f1e6d4; border-bottom: 1px solid var(--line);
+  }
+
+  /* ---------- Lobi ---------- */
+  #lobby { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .lobby-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .lobby-top h1 { font-size: 22px; margin: 0; }
+  .lobby-top .spacer { flex: 1; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .room-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+    cursor: pointer; transition: transform .12s, box-shadow .12s;
+  }
+  .room-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(80,50,20,.10); }
+  .room-card .cat { font-size: 12px; color: var(--muted); }
+  .room-card .topic { font-weight: 700; margin: 6px 0 10px; line-height: 1.3; min-height: 2.6em; }
+  .room-card .seats { display: flex; gap: 4px; flex-wrap: wrap; }
+  .room-card .seat { width: 16px; height: 12px; border-radius: 4px; background: #eadbc6; }
+  .room-card .seat.full { background: var(--accent); }
+  .room-card .meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .room-card.full-room { opacity: .6; }
+
+  /* ---------- Oda ---------- */
+  #room { display: none; max-width: 1280px; margin: 0 auto; padding: 16px; gap: 16px; }
+  #room.active { display: flex; }
+  .scene-wrap { flex: 1.6; min-width: 0; }
+  .room-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .room-head h2 { font-size: 18px; margin: 0; }
+  .room-head .tag { font-size: 12px; color: var(--muted); }
+  .room-head .spacer { flex: 1; }
+  .scene {
+    position: relative; width: 100%; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(80,50,20,.12); user-select: none;
+  }
+  .scene svg { display: block; width: 100%; height: auto; }
+  .overlay { position: absolute; inset: 0; pointer-events: none; }
+  .nametag {
+    position: absolute; transform: translate(-50%, 0); white-space: nowrap;
+    font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    background: rgba(255,250,242,.92); border: 1px solid rgba(0,0,0,.08); pointer-events: auto; cursor: pointer;
+    max-width: 130px; overflow: hidden; text-overflow: ellipsis; z-index: 1;
+  }
+  .nametag.me { background: var(--accent); color: #fff; }
+  .bubble {
+    position: absolute; transform: translate(-50%, -100%); width: max-content; max-width: 200px; min-width: 40px; z-index: 2;
+    background: #fff; color: var(--ink); font-size: 13px; line-height: 1.3; padding: 7px 10px;
+    border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.15); animation: pop .18s ease-out;
+    word-wrap: break-word;
+  }
+  .bubble::after {
+    content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #fff; border-bottom: 0;
+  }
+  .bubble.typing { color: var(--muted); letter-spacing: 2px; font-weight: 700; }
+  .bubble.fade { opacity: 0; transition: opacity .6s; }
+  .bubble.left { transform: translate(-18%, -100%); }
+  .bubble.left::after { left: 18%; }
+  .bubble.right { transform: translate(-82%, -100%); }
+  .bubble.right::after { left: 82%; }
+  @keyframes pop { from { scale: .85; opacity: 0; } to { scale: 1; opacity: 1; } }
+  .empty-seat {
+    position: absolute; transform: translate(-50%, -50%); width: 64px; height: 40px; border-radius: 10px;
+    pointer-events: auto; cursor: pointer;
+  }
+  .empty-seat:hover::after {
+    content: "Buraya otur"; position: absolute; left: 50%; top: -22px; transform: translateX(-50%);
+    font-size: 11px; white-space: nowrap; background: rgba(59,42,30,.85); color: #fff; padding: 2px 6px; border-radius: 6px;
+  }
+  .tea-fly { position: absolute; font-size: 22px; transform: translate(-50%, -50%); transition: left .9s ease-in-out, top .9s ease-in-out; }
+  .menu {
+    position: absolute; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.15); pointer-events: auto; z-index: 5; transform: translate(-50%, 8px);
+  }
+  .menu button { display: block; width: 100%; text-align: left; border: 0; padding: 7px 10px; font-size: 13px; }
+  .menu button:hover { background: #f6efe4; }
+
+  .chat {
+    flex: 1; min-width: 300px; display: flex; flex-direction: column; background: var(--card);
+    border: 1px solid var(--line); border-radius: 16px; overflow: hidden; max-height: calc(100vh - 140px);
+  }
+  .chat-head { padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 700; display: flex; justify-content: space-between; }
+  .chat-head span { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .log { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 260px; }
+  .msg { font-size: 14px; line-height: 1.4; }
+  .msg b { margin-right: 6px; }
+  .msg.sys { font-size: 12px; color: var(--muted); font-style: italic; }
+  .msg.warn { font-size: 12px; color: #a23b22; background: #fbe9e3; padding: 6px 8px; border-radius: 8px; }
+  .composer { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); }
+  .composer input {
+    flex: 1; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #fff;
+  }
+  .composer input:focus { outline: 2px solid #e8b9a9; border-color: var(--accent); }
+  .me-line { font-size: 12px; color: var(--muted); padding: 0 12px 10px; }
+
+  @media (max-width: 900px) {
+    #room.active { flex-direction: column; padding: 10px; }
+    .chat { max-height: none; }
+    .log { max-height: 40vh; }
+    .bubble { font-size: 11px; max-width: 130px; padding: 5px 8px; }
+    .nametag { font-size: 8px; padding: 1px 4px; max-width: 58px; }
+    .chat { min-width: 0; }
+    .composer input { min-width: 0; }
+    .empty-seat { width: 40px; height: 26px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">şark<span>köşesi</span></div>
+  <div class="online" id="onlineCount">🟢 214 kişi çevrimiçi</div>
+  <select class="city" id="citySelect" aria-label="Şehir seç">
+    <option value="turkiye">🇹🇷 Tüm Türkiye</option>
+    <option value="istanbul">📍 İstanbul</option>
+    <option value="ankara">📍 Ankara</option>
+    <option value="izmir" selected>📍 İzmir</option>
+    <option value="trabzon">📍 Trabzon</option>
+    <option value="nevsehir">📍 Nevşehir</option>
+    <option value="gaziantep">📍 Gaziantep</option>
+  </select>
+</header>
+<div class="proto-note">Prototip: Diğer kullanıcılar simülasyondur. Gerçek eşleşme, filtre ve bildirim sunucuda çalışacaktır.</div>
+
+<!-- LOBİ -->
+<section id="lobby">
+  <div class="lobby-top">
+    <h1>İzmir'in köşeleri</h1>
+    <div class="spacer"></div>
+    <button id="newRoomBtn">+ Köşe aç</button>
+    <button class="primary" id="randomBtn">🎲 Rastgele bir köşeye otur</button>
+  </div>
+  <div class="grid" id="roomGrid"></div>
+</section>
+
+<!-- ODA -->
+<section id="room">
+  <div class="scene-wrap">
+    <div class="room-head">
+      <button id="backBtn">← Köşeler</button>
+      <div>
+        <h2 id="roomTopic">Konu</h2>
+        <div class="tag" id="roomMeta"></div>
+      </div>
+      <div class="spacer"></div>
+      <button id="randomInRoomBtn" title="Başka bir köşeye geç">🎲 Başka köşe</button>
+      <button id="reportRoomBtn" title="Bu köşeyi bildir">🚩 Bildir</button>
+    </div>
+    <div class="scene" id="scene">
+      <svg id="svg" viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="overlay" id="overlay"></div>
+    </div>
+  </div>
+  <aside class="chat">
+    <div class="chat-head">Sohbet <span id="seatCount"></span></div>
+    <div class="log" id="log"></div>
+    <div class="composer">
+      <input id="input" maxlength="300" placeholder="Bir şey yaz..." autocomplete="off" />
+      <button class="primary" id="sendBtn">Gönder</button>
+    </div>
+    <div class="me-line" id="meLine"></div>
+  </aside>
+</section>
+
+<script>
+/* ================= Veri ================= */
+const W = 800, H = 520;
+const SEATS = [
+  { x: 175, y: 214, tag: 34 }, { x: 265, y: 214, tag: 54 }, { x: 355, y: 214, tag: 34 },
+  { x: 445, y: 214, tag: 54 }, { x: 535, y: 214, tag: 34 }, { x: 625, y: 214, tag: 54 },
+  { x: 96, y: 318, tag: 34 },  { x: 96, y: 440, tag: 34 },
+  { x: 704, y: 318, tag: 34 }, { x: 704, y: 440, tag: 34 },
+];
+const CAPACITY = SEATS.length;
+const COLORS = ["#c0392b","#2e86ab","#8e44ad","#27ae60","#d35400","#16a085","#b7950b","#7f5539","#e84393","#34495e"];
+const SKIN = ["#f1c8a0","#e0ac7e","#c68b59","#f5d6b4","#d9a074"];
+/* ---------- Şehir temaları: manzara, renkler, sinideki ikram, takma adlar, konular ---------- */
+const SIMIT = `<circle cx="-46" cy="26" r="7" fill="none" stroke="#b5732f" stroke-width="4"/><circle cx="42" cy="27" r="7" fill="none" stroke="#b5732f" stroke-width="4"/>`;
+const CITIES = {
+  izmir: {
+    name: "İzmir", gen: "İzmir'in", sky: ["#f5a35c", "#fbd7a0"], kilim: ["#a43d2a", "#c4593c", "#e3b45a"], plates: ["#2e6f8e", "#8e2f2a"],
+    skyline: `
+      <circle cx="98" cy="46" r="14" fill="#fff3c4"/>
+      <path d="M0 110 L0 92 L18 92 L18 80 L32 80 L32 96 L46 96 L46 74 L52 66 L58 74 L58 96 L76 96 L76 86 L92 86 L92 98 L110 98 L110 84 L124 84 L124 100 L140 100 L140 134 L0 134 Z" fill="#7a5a49" opacity=".85"/>
+      <g fill="#5a3d31"><rect x="62" y="56" width="16" height="50"/><rect x="58" y="50" width="24" height="8"/><path d="M60 50 L70 36 L80 50 Z"/></g>
+      <rect x="0" y="112" width="140" height="22" fill="#4f7ea8" opacity=".75"/>`,
+    tray: `<g fill="#d9a441" stroke="#a8742a" stroke-width="1.5"><ellipse cx="-46" cy="26" rx="9" ry="5"/><ellipse cx="42" cy="27" rx="9" ry="5"/></g>
+           <path d="M-50 26 q4 -3 8 0 M38 27 q4 -3 8 0" stroke="#a8742a" fill="none"/>`,
+    trayName: "boyoz",
+    names: ["Boyozsever","Kumru Ustası","Kordon Yürüyüşçüsü","Gevrek Sever","Saat Kulesi","Alsancak Martısı","Midyeci","Kemeraltı Gezgini","Bergama Tulumu","Çeşme Rüzgârı","Şevketi Bostan","Asansör Manzarası","Lokma Tatlısı","Karşıyaka Vapuru"],
+    rooms: [
+      { cat: "🎶 Etkinlik", topic: "Bu akşam Kordon'da ne yapılır?", lines: ["Saat 9'da Alsancak'ta canlı müzik varmış", "Kordon'da oturup çekirdek çitlemek bile yeter bence", "Hava güzel, dışarı çıkılır", "Geçen hafta çok kalabalıktı ama"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Boyozun yanına ne yakışır: yumurta mı çay mı?", lines: ["Boyoz + haşlanmış yumurta + çay, tartışılmaz 😌", "Ben ayranla yiyorum, kızmayın", "Kumruyu unutmayalım ama", "Gevrek mi simit mi tartışmasına girmeyelim 😂"] },
+      { cat: "⚽ Spor", topic: "Göztepe mi Karşıyaka mı, bu sezon kim önde?", lines: ["Bu sezon defans çok iyi", "Derbi günü şehir ikiye bölünüyor", "Stat yine dolar", "Ben sadece maç özetlerini izliyorum"] },
+    ],
+  },
+  istanbul: {
+    name: "İstanbul", gen: "İstanbul'un", sky: ["#f29b6b", "#fcd8b0"], kilim: ["#7a2233", "#a8384a", "#d9b45a"], plates: ["#1f5f8b", "#b03a48"],
+    skyline: `
+      <circle cx="30" cy="40" r="12" fill="#fff1c9"/>
+      <path d="M0 104 L0 96 L60 96 L60 100 L88 100 L88 92 L140 92 L140 134 L0 134 Z" fill="#6c4a4a" opacity=".8"/>
+      <g fill="#4a3030">
+        <path d="M14 100 Q30 76 46 100 Z"/><path d="M8 100 Q14 90 20 100 Z"/><path d="M40 100 Q46 90 52 100 Z"/>
+        <rect x="6" y="66" width="3" height="34"/><path d="M5 66 L7.5 56 L10 66 Z"/>
+        <rect x="51" y="66" width="3" height="34"/><path d="M50 66 L52.5 56 L55 66 Z"/>
+        <rect x="98" y="56" width="16" height="44"/><rect x="96" y="54" width="20" height="4"/><path d="M96 54 L106 34 L116 54 Z"/>
+      </g>
+      <rect x="0" y="110" width="140" height="24" fill="#3f6f99" opacity=".85"/>
+      <path d="M50 118 L82 118 L78 124 L54 124 Z" fill="#fff"/><rect x="58" y="113" width="14" height="5" fill="#fff"/><rect x="62" y="109" width="3" height="4" fill="#c0392b"/>`,
+    tray: SIMIT, trayName: "simit",
+    names: ["Galata Martısı","Vapur Yolcusu","Simitçi","Boğaz Esintisi","Kadıköy Rıhtımı","Balat Merdiveni","Eminönü Balıkçısı","Kız Kulesi","Tramvay Yolcusu","Moda Sahili","Çay Bahçesi","Adalar Bisikleti"],
+    rooms: [
+      { cat: "🚢 Ulaşım", topic: "Vapurda simit mi, poğaça mı?", lines: ["Vapurda simit + çay klasik", "Martılara simit atmayın diyorlar ama 😄", "Kadıköy vapuru en güzeli", "Poğaça da fena değil açıkçası"] },
+      { cat: "🎶 Etkinlik", topic: "Hafta sonu Kadıköy'de ne yapılır?", lines: ["Moda sahilinde oturmak bile yeter", "Bahariye'de bir konser varmış", "Çarşı tarafı çok kalabalık oluyor", "Sahaf gezmeyi seven var mı?"] },
+      { cat: "🏙️ Gündem", topic: "Trafik yine kilit, siz nasıl gidiyorsunuz?", lines: ["Metrobüs tek kurtuluş", "Ben artık vapurla gidiyorum", "Köprü trafiği bitmiyor", "Evden çalışmak ilaç gibi 😅"] },
+    ],
+  },
+  ankara: {
+    name: "Ankara", gen: "Ankara'nın", sky: ["#8fb6d9", "#dbe9f3"], kilim: ["#6b3a2a", "#8f5a3c", "#d6c08a"], plates: ["#3a5f7a", "#8a4a2a"],
+    skyline: `
+      <circle cx="28" cy="36" r="11" fill="#fffbe6"/>
+      <path d="M0 100 L0 90 L14 90 L14 78 L26 78 L26 94 L80 94 L80 82 L92 82 L92 96 L118 96 L118 86 L140 86 L140 134 L0 134 Z" fill="#6f7d8c" opacity=".8"/>
+      <g fill="#4a5563">
+        <path d="M34 104 Q50 78 66 104 Z"/>
+        <rect x="30" y="62" width="3" height="42"/><path d="M29 62 L31.5 52 L34 62 Z"/>
+        <rect x="67" y="62" width="3" height="42"/><path d="M66 62 L68.5 52 L71 62 Z"/>
+        <rect x="101" y="52" width="6" height="52"/><circle cx="104" cy="47" r="9"/><rect x="103" y="30" width="2" height="9"/>
+      </g>
+      <rect x="0" y="104" width="140" height="30" fill="#8d7a5f"/>`,
+    tray: SIMIT, trayName: "Ankara simidi",
+    names: ["Ankara Kedisi","Tiftik Keçisi","Kuğulu Park","Hamamönü Gezgini","Atakule Manzarası","Kızılay Yolcusu","Ankara Simidi","Gençlik Parkı","Tunalı Yürüyüşçüsü","Eymir Bisikletçisi","Ulus Çarşısı"],
+    rooms: [
+      { cat: "🌳 Şehir", topic: "Kuğulu Park'ta kuğular hâlâ yerinde mi?", lines: ["Geçen gün baktım, yerindeler 🦢", "Kışın da kalıyorlar mı merak ediyorum", "Tunalı'da yürüyüp parka uğramak klasik", "Hafta sonu çok kalabalık oluyor"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Ankara'da en iyi simit nerede?", lines: ["Ulus tarafı bence", "Sıcak simit + beyaz peynir yeter", "Ankara simidi ayrı bir şey", "Sabah erken gidince daha güzel"] },
+      { cat: "🎶 Etkinlik", topic: "Hafta sonu Ankara'da ne yapılır?", lines: ["Eymir'de bisiklet", "Hamamönü'nde kahve içilir", "Konser takvimine bakan var mı?", "Ben müzeleri gezmeyi seviyorum"] },
+    ],
+  },
+  trabzon: {
+    name: "Trabzon", gen: "Trabzon'un", sky: ["#9cc7c9", "#e2efe9"], kilim: ["#2f5a3a", "#4c7d4f", "#e3c05a"], plates: ["#2f6b3f", "#3a5f8a"],
+    skyline: `
+      <path d="M0 80 L30 48 L55 72 L80 38 L110 70 L140 50 L140 134 L0 134 Z" fill="#2f6b3f"/>
+      <rect x="0" y="66" width="140" height="10" fill="#fff" opacity=".35"/>
+      <path d="M0 98 L25 84 L50 96 L80 80 L110 94 L140 84 L140 134 L0 134 Z" fill="#3f8a4f"/>
+      <ellipse cx="70" cy="122" rx="66" ry="12" fill="#5fa3b8"/>
+      <g fill="#e9eef0"><path d="M58 106 Q64 98 70 106 Z"/><rect x="72" y="92" width="2.5" height="14"/><path d="M71.5 92 L73.25 85 L75 92 Z"/></g>`,
+    tray: `<g fill="#b8c4cc" stroke="#7d8b94" stroke-width="1">
+             <path d="M-56 24 Q-48 20 -40 24 Q-48 28 -56 24 Z"/><path d="M-40 24 L-35 21 L-35 27 Z"/>
+             <path d="M30 28 Q38 24 46 28 Q38 32 30 28 Z"/><path d="M46 28 L51 25 L51 31 Z"/>
+             <path d="M-20 30 Q-12 26 -4 30 Q-12 34 -20 30 Z"/><path d="M-4 30 L1 27 L1 33 Z"/></g>`,
+    trayName: "hamsi",
+    names: ["Uzungöl Esintisi","Kemençeci","Hamsi Sever","Sümela Yolcusu","Karadeniz Dalgası","Akçaabat Köftesi","Yayla Çayı","Fındık Toplayıcısı","Horon Ustası","Boztepe Manzarası","Zigana Rüzgârı"],
+    rooms: [
+      { cat: "🍽️ Yeme-İçme", topic: "Hamsi en güzel nasıl pişer?", lines: ["Tava, mısır unuyla, tartışmasız", "Buğulama da çok güzel", "Hamsili pilavı unutmayın", "Bu sene hamsi biraz geç geldi"] },
+      { cat: "🏞️ Gezi", topic: "Uzungöl mü Sümela mı, ilk nereye gidilir?", lines: ["Sabah Sümela, akşam Uzungöl", "Uzungöl sisli olunca bambaşka", "Yaylaya çıkmadan olmaz", "Hafta içi gidin, daha sakin"] },
+      { cat: "⚽ Spor", topic: "Trabzonspor bu sezon nasıl gidiyor?", lines: ["Taraftar her zaman arkasında", "Orta saha toparlarsa iyi olur", "Stat yine full", "Deplasmanlar zor geçiyor"] },
+    ],
+  },
+  nevsehir: {
+    name: "Nevşehir", gen: "Nevşehir'in", sky: ["#f2a7a0", "#fde2c4"], kilim: ["#9a5b3a", "#c0825a", "#f0d6a0"], plates: ["#b5542e", "#6b7f3a"],
+    skyline: `
+      <g><circle cx="34" cy="34" r="9" fill="#e74c3c"/><rect x="32" y="45" width="4" height="4" fill="#6b3f22"/><line x1="29" y1="40" x2="32" y2="45" stroke="#6b3f22"/><line x1="39" y1="40" x2="36" y2="45" stroke="#6b3f22"/></g>
+      <g><circle cx="80" cy="24" r="7" fill="#f1c40f"/><rect x="78.5" y="32" width="3" height="3" fill="#6b3f22"/></g>
+      <g><circle cx="110" cy="44" r="8" fill="#2e86ab"/><rect x="108" y="53" width="4" height="4" fill="#6b3f22"/></g>
+      <g><circle cx="60" cy="56" r="5" fill="#8e44ad"/><rect x="59" y="62" width="2" height="2" fill="#6b3f22"/></g>
+      <path d="M0 112 Q70 96 140 112 L140 134 L0 134 Z" fill="#c9a074"/>
+      <g fill="#d9b48a" stroke="#a07a55" stroke-width="1">
+        <path d="M14 134 L22 82 L30 134 Z"/><path d="M40 134 L50 74 L60 134 Z"/><path d="M84 134 L94 78 L104 134 Z"/><path d="M110 134 L118 88 L126 134 Z"/>
+      </g>
+      <g fill="#8a6545"><ellipse cx="22" cy="82" rx="8" ry="4"/><ellipse cx="50" cy="74" rx="9" ry="5"/><ellipse cx="94" cy="78" rx="9" ry="5"/><ellipse cx="118" cy="88" rx="7" ry="4"/></g>`,
+    tray: `<g transform="translate(-46 22)"><path d="M-7 -7 Q-11 4 -5 9 L5 9 Q11 4 7 -7 Z" fill="#b55a2e" stroke="#7a3518"/><rect x="-6" y="-9" width="12" height="3" rx="1" fill="#8a4422"/></g>
+           <g transform="translate(42 23)"><path d="M-6 -6 Q-9 3 -4 7 L4 7 Q9 3 6 -6 Z" fill="#c26a3a" stroke="#7a3518"/></g>`,
+    trayName: "çömlek",
+    names: ["Peri Bacası","Balon Pilotu","Avanos Çömlekçisi","Göreme Gezgini","Ürgüp Bağı","Testi Kebabı","Uçhisar Kalesi","Kızılçukur Gün Batımı","Derinkuyu Kâşifi","Kapadokya Atı"],
+    rooms: [
+      { cat: "🎈 Gezi", topic: "Balonları sabah izlemek için en iyi tepe?", lines: ["Gün doğumunda Göreme tepesi", "Uçhisar'dan da çok güzel görünüyor", "Rüzgâr varsa uçmuyorlar, dikkat", "Bir kere bile görmek yeter, büyüleyici"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Testi kebabı mı, çömlekte fasulye mi?", lines: ["Testiyi kırma anı ayrı keyif", "Avanos'ta çömlek fasulye efsane", "İkisini de deneyin derim", "Sonuna bir de kayısı tatlısı"] },
+      { cat: "🏙️ Gündem", topic: "Turist sezonu bitti mi, şehir nasıl?", lines: ["Kışın çok sakin oluyor", "Kar yağınca peri bacaları masal gibi", "Esnaf yeni sezonu bekliyor", "Ben sakin hâlini daha çok seviyorum"] },
+    ],
+  },
+  gaziantep: {
+    name: "Gaziantep", gen: "Gaziantep'in", sky: ["#f4b860", "#fbe3b0"], kilim: ["#7a2a2a", "#9c3d2e", "#a8c45a"], plates: ["#6a9a3a", "#9c3d2e"],
+    skyline: `
+      <circle cx="104" cy="34" r="12" fill="#fff3c4"/>
+      <path d="M0 110 Q70 70 140 110 L140 134 L0 134 Z" fill="#9c7b55"/>
+      <g fill="#6e4f35">
+        <rect x="42" y="74" width="56" height="20"/>
+        <rect x="36" y="64" width="14" height="30"/><rect x="90" y="64" width="14" height="30"/><rect x="63" y="58" width="14" height="36"/>
+        ${[36,40,44,48,90,94,98,102,63,67,71,75].map(x => `<rect x="${x}" y="${x >= 63 && x <= 75 ? 54 : 60}" width="2.5" height="4"/>`).join("")}
+      </g>
+      <g fill="#5d7f3a"><circle cx="14" cy="112" r="7"/><circle cx="126" cy="112" r="7"/><rect x="13" y="114" width="2" height="8" fill="#5a3d31"/><rect x="125" y="114" width="2" height="8" fill="#5a3d31"/></g>`,
+    tray: `<g stroke="#9c6a1c" stroke-width="1" fill="#e0a83c">
+             <path d="M-52 26 L-46 21 L-40 26 L-46 31 Z"/><path d="M-40 26 L-34 21 L-28 26 L-34 31 Z"/>
+             <path d="M30 27 L36 22 L42 27 L36 32 Z"/><path d="M42 27 L48 22 L54 27 L48 32 Z"/></g>
+           <g fill="#6a9a3a"><circle cx="-46" cy="26" r="1.6"/><circle cx="-34" cy="26" r="1.6"/><circle cx="36" cy="27" r="1.6"/><circle cx="48" cy="27" r="1.6"/></g>`,
+    trayName: "baklava",
+    names: ["Fıstık Ağacı","Baklavacı","Zeugma Mozaiği","Bakırcılar Çarşısı","Beyran Ustası","Katmerci","Gaziantep Kalesi","Menengiç Kahvesi","Yuvalama Sever","Kutnu Kumaşı","Antep Bağları"],
+    rooms: [
+      { cat: "🍽️ Yeme-İçme", topic: "Sabah kahvaltısı: katmer mi beyran mı?", lines: ["Sabah beyran, öğlen katmer 😄", "Katmerin yanına bir de çay", "Beyran için erken gitmek lazım", "Antep'te diyet olmaz"] },
+      { cat: "🏛️ Gezi", topic: "Zeugma Müzesi'ni gezmeyen kaldı mı?", lines: ["Çingene Kızı mozaiği büyüleyici", "En az iki saat ayırın", "Okul gezisiyle gitmiştim", "Bakırcılar Çarşısı'na da uğrayın"] },
+      { cat: "☕ Muhabbet", topic: "Menengiç kahvesini seven var mı?", lines: ["Sütlü menengiç favorim", "İlk seferde şaşırtıyor ama sonra bağımlılık yapıyor", "Kalenin oradaki kahveciler güzel", "Ben Türk kahvesinden şaşmam"] },
+    ],
+  },
+  turkiye: {
+    name: "Tüm Türkiye", gen: "Tüm Türkiye'nin", sky: ["#7fb3d5", "#e8f1f7"], kilim: ["#8f2a24", "#b5452f", "#e3b45a"], plates: ["#c0392b", "#2e6f8e"],
+    skyline: `
+      <circle cx="104" cy="32" r="11" fill="#fffbe6"/>
+      <path d="M0 96 L22 70 L44 90 L70 60 L96 88 L120 72 L140 84 L140 134 L0 134 Z" fill="#7f9a6b"/>
+      <path d="M0 106 Q35 94 70 104 Q105 114 140 100 L140 134 L0 134 Z" fill="#c9b27a"/>
+      <rect x="0" y="118" width="140" height="16" fill="#4f7ea8" opacity=".8"/>`,
+    tray: SIMIT, trayName: "simit",
+    names: null, // tüm şehirlerin takma adlarından rastgele
+    rooms: [
+      { cat: "🗺️ Gezi", topic: "Türkiye'de mutlaka görülmesi gereken 3 yer?", lines: ["Kapadokya, Sümela, Pamukkale", "Doğu Ekspresi ile Kars'a gitmek", "Ege kıyıları bambaşka", "Ben Mardin derim"] },
+      { cat: "🍽️ Yeme-İçme", topic: "Memleketinin en abartılan yemeği hangisi?", lines: ["Bizimkini kimse abartamaz 😄", "Her şehrin kendi kebabı var zaten", "Bence en iyisi annemin yemekleri", "Bu konu kavga çıkarır, dikkat 😂"] },
+      { cat: "⚽ Spor", topic: "Bu sezon şampiyonluk yarışı kimin?", lines: ["Son haftaya kadar belli olmaz", "Anadolu takımları sürpriz yapabilir", "Derbiler belirleyecek", "Ben milli maçları daha çok seviyorum"] },
+    ],
+  },
+};
+const GENERIC_ROOMS = [
+  { cat: "💬 Muhabbet", topic: "Genel muhabbet, gel otur bir çay iç", lines: ["Selam herkese 👋", "Çaylar benden ☕", "Hava ne güzel bugün", "Ben de yeni geldim, merhaba"] },
+  { cat: "🎓 Okul", topic: "Final haftası, kim ne çalışıyor?", lines: ["Matematik finali yarın, yardım 😩", "Kütüphane 24 saat açık mı?", "Bu dönem bitsin artık", "Not ortalamasını kurtarmam lazım"] },
+  { cat: "💭 Dertleşme", topic: "Bugün nasıl geçti, anlat bakalım", lines: ["Bugün biraz yorucuydu ama iyi", "İşte toplantı üstüne toplantı", "Akşam bir çay iyi gelir", "Sizi dinlemek bile iyi geldi"] },
+  { cat: "🎬 Dizi-Film", topic: "Bu hafta ne izledin, öner bakalım", lines: ["Yeni çıkan diziyi bitirdim, finali şaşırttı", "Komedi önerisi olan?", "Hafta sonu sinemaya gideceğim", "Belgesel seven var mı?"] },
+];
+CITIES.turkiye.names = Object.values(CITIES).flatMap(c => c.names || []);
+
+let cityKey = "izmir";
+let CITY = CITIES[cityKey];
+let NAMES = CITY.names;
+let ROOMS = [];
+const roomCache = {};
+let roomSeq = 1;
+function setCity(key) {
+  cityKey = key; CITY = CITIES[key]; NAMES = CITY.names;
+  if (!roomCache[key]) {
+    roomCache[key] = [...CITY.rooms, ...GENERIC_ROOMS].map(r => ({ ...r, id: roomSeq++, n: 2 + Math.floor(Math.random() * 8) }));
+  }
+  ROOMS = roomCache[key];
+  document.querySelector("#lobby h1").textContent = `${CITY.gen} köşeleri`;
+  $("onlineCount").textContent = `🟢 ${key === "turkiye" ? 2140 + Math.floor(Math.random() * 300) : 60 + Math.floor(Math.random() * 260)} kişi çevrimiçi`;
+}
+
+/* Basit filtre (sunucudaki filtrenin küçük bir örneği) */
+const BLOCKED = ["salak", "aptal", "gerizekalı", "mal"];
+function normalize(s) {
+  return s.toLocaleLowerCase("tr").replace(/[ıİ]/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
+    .replace(/ç/g, "c").replace(/ö/g, "o").replace(/ü/g, "u")
+    .replace(/1/g, "i").replace(/0/g, "o").replace(/3/g, "e").replace(/4/g, "a").replace(/\$/g, "s")
+    .replace(/(.)\1{2,}/g, "$1");
+}
+function checkMessage(text) {
+  const words = normalize(text).split(/[^a-z]+/).filter(Boolean);
+  if (words.some(w => BLOCKED.some(b => w === normalize(b) || w.startsWith(normalize(b) + "l")))) return "Mesajın topluluk kurallarına uymadığı için gönderilmedi.";
+  if (/(\+?90|0)?\s*5\d{2}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}/.test(text)) return "Telefon numarası paylaşmak güvenliğin için engellenir.";
+  if (/(https?:\/\/|www\.|\.com\b|\.net\b|instagram|insta:)/i.test(text)) return "Link ve sosyal medya hesabı paylaşımı engellenir.";
+  return null;
+}
+
+/* ================= Durum ================= */
+let room = null;
+let people = [];   // { id, name, color, skin, seat, me }
+let me = null;
+let botTimer = null;
+let idSeq = 1;
+
+const $ = id => document.getElementById(id);
+const pct = (v, total) => (v / total * 100) + "%";
+
+/* ================= Lobi ================= */
+function renderLobby() {
+  const grid = $("roomGrid");
+  grid.innerHTML = "";
+  ROOMS.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "room-card" + (r.n >= CAPACITY ? " full-room" : "");
+    const seats = Array.from({ length: CAPACITY }, (_, i) => `<div class="seat ${i < r.n ? "full" : ""}"></div>`).join("");
+    card.innerHTML = `
+      <div class="cat">${r.cat}</div>
+      <div class="topic">${escapeHtml(r.topic)}</div>
+      <div class="seats">${seats}</div>
+      <div class="meta"><span>${r.n}/${CAPACITY} kişi</span><span>${r.n >= CAPACITY ? "Dolu" : "Otur →"}</span></div>`;
+    card.onclick = () => r.n < CAPACITY ? enterRoom(r) : alert("Bu köşe dolu. Aynı konuda yeni bir köşe açılacak (prototipte devre dışı).");
+    grid.appendChild(card);
+  });
+}
+
+function randomRoom(excludeId) {
+  // Boş yeri olan ve içinde en az 2 kişi bulunan köşeleri tercih et
+  let pool = ROOMS.filter(r => r.n < CAPACITY && r.n >= 2 && r.id !== excludeId);
+  if (!pool.length) pool = ROOMS.filter(r => r.n < CAPACITY && r.id !== excludeId);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* ================= Sahne ================= */
+function drawScene() {
+  const svg = $("svg");
+  const cushions = SEATS.map((s, i) => {
+    const c = i % 2 ? "#a8322a" : "#8f2a24";
+    return `
+      <g transform="translate(${s.x} ${s.y + 22})">
+        <rect x="-38" y="-16" width="76" height="34" rx="12" fill="${c}" stroke="#5e1a15" stroke-width="2"/>
+        <rect x="-30" y="-10" width="60" height="22" rx="8" fill="none" stroke="#e2b04a" stroke-width="2" stroke-dasharray="4 3"/>
+        <circle cx="-38" cy="-16" r="3" fill="#e2b04a"/><circle cx="38" cy="-16" r="3" fill="#e2b04a"/>
+        <circle cx="-38" cy="18" r="3" fill="#e2b04a"/><circle cx="38" cy="18" r="3" fill="#e2b04a"/>
+      </g>`;
+  }).join("");
+
+  svg.innerHTML = `
+    <defs>
+      <pattern id="kilim" width="40" height="40" patternUnits="userSpaceOnUse">
+        <rect width="40" height="40" fill="${CITY.kilim[0]}"/>
+        <path d="M20 4 L36 20 L20 36 L4 20 Z" fill="${CITY.kilim[1]}"/>
+        <path d="M20 12 L28 20 L20 28 L12 20 Z" fill="${CITY.kilim[2]}"/>
+        <circle cx="20" cy="20" r="2.5" fill="#3b2a1e"/>
+      </pattern>
+      <pattern id="wall" width="28" height="28" patternUnits="userSpaceOnUse">
+        <rect width="28" height="28" fill="#ead6b5"/>
+        <path d="M14 6 L18 14 L14 22 L10 14 Z" fill="#e2caa2"/>
+      </pattern>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${CITY.sky[0]}"/><stop offset="1" stop-color="${CITY.sky[1]}"/>
+      </linearGradient>
+      <radialGradient id="tray" cx=".45" cy=".4" r=".7">
+        <stop offset="0" stop-color="#f0cf7a"/><stop offset="1" stop-color="#b8862e"/>
+      </radialGradient>
+      <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#ffe7a8" stop-opacity=".9"/><stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- duvar -->
+    <rect x="0" y="0" width="${W}" height="250" fill="url(#wall)"/>
+    <rect x="0" y="236" width="${W}" height="14" fill="#7a4b2a"/>
+
+    <!-- pencere ve şehir manzarası -->
+    <g transform="translate(330 28)">
+      <rect x="-8" y="-8" width="156" height="150" rx="70" fill="#6b3f22"/>
+      <clipPath id="win"><rect x="0" y="0" width="140" height="134" rx="64"/></clipPath>
+      <rect x="0" y="0" width="140" height="134" rx="64" fill="url(#sky)"/>
+      <g clip-path="url(#win)">${CITY.skyline}</g>
+      <line x1="70" y1="0" x2="70" y2="134" stroke="#6b3f22" stroke-width="5"/>
+      <line x1="0" y1="70" x2="140" y2="70" stroke="#6b3f22" stroke-width="5"/>
+    </g>
+
+    <!-- duvar süsleri: tabaklar ve fener -->
+    <g>
+      <circle cx="150" cy="80" r="26" fill="${CITY.plates[0]}" stroke="#e3b45a" stroke-width="4"/>
+      <circle cx="150" cy="80" r="12" fill="#f2e2c4"/>
+      <circle cx="650" cy="80" r="26" fill="${CITY.plates[1]}" stroke="#e3b45a" stroke-width="4"/>
+      <circle cx="650" cy="80" r="12" fill="#f2e2c4"/>
+      <circle cx="245" cy="60" r="40" fill="url(#glow)"/>
+      <line x1="245" y1="0" x2="245" y2="34" stroke="#5a3d31" stroke-width="2"/>
+      <path d="M233 34 L257 34 L262 66 L228 66 Z" fill="#c9973f" stroke="#7a4b2a" stroke-width="2"/>
+      <rect x="236" y="42" width="18" height="18" fill="#ffe7a8"/>
+      <circle cx="555" cy="60" r="40" fill="url(#glow)"/>
+      <line x1="555" y1="0" x2="555" y2="34" stroke="#5a3d31" stroke-width="2"/>
+      <path d="M543 34 L567 34 L572 66 L538 66 Z" fill="#c9973f" stroke="#7a4b2a" stroke-width="2"/>
+      <rect x="546" y="42" width="18" height="18" fill="#ffe7a8"/>
+    </g>
+
+    <!-- zemin halı -->
+    <rect x="0" y="250" width="${W}" height="${H - 250}" fill="#6e3b22"/>
+    <rect x="150" y="285" width="500" height="215" rx="6" fill="url(#kilim)" stroke="#e3b45a" stroke-width="6"/>
+    <rect x="166" y="301" width="468" height="183" rx="4" fill="none" stroke="#3b2a1e" stroke-width="2" stroke-dasharray="10 6"/>
+
+    <!-- sedir (U şeklinde oturma) -->
+    <rect x="120" y="196" width="560" height="60" rx="10" fill="#4d2a17"/>
+    <rect x="128" y="190" width="544" height="34" rx="10" fill="#6d3a20"/>
+    <rect x="44" y="230" width="104" height="270" rx="12" fill="#4d2a17"/>
+    <rect x="652" y="230" width="104" height="270" rx="12" fill="#4d2a17"/>
+    <rect x="40" y="224" width="20" height="282" rx="8" fill="#6d3a20"/>
+    <rect x="740" y="224" width="20" height="282" rx="8" fill="#6d3a20"/>
+
+    ${cushions}
+
+    <!-- sini, çaydanlık, bardaklar -->
+    <g transform="translate(400 392)">
+      <ellipse cx="0" cy="34" rx="70" ry="10" fill="#000" opacity=".2"/>
+      <rect x="-8" y="10" width="16" height="26" fill="#5e3a1f"/>
+      <ellipse cx="0" cy="8" rx="82" ry="34" fill="url(#tray)" stroke="#8a6221" stroke-width="3"/>
+      <ellipse cx="0" cy="8" rx="64" ry="24" fill="none" stroke="#8a6221" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <!-- çaydanlık -->
+      <g transform="translate(-6 -22)">
+        <ellipse cx="0" cy="22" rx="20" ry="16" fill="#d9dde1" stroke="#8a9096" stroke-width="2"/>
+        <rect x="-11" y="-4" width="22" height="14" rx="5" fill="#e6e9ec" stroke="#8a9096" stroke-width="2"/>
+        <circle cx="0" cy="-7" r="4" fill="#8a9096"/>
+        <path d="M18 18 Q32 10 30 0" stroke="#8a9096" stroke-width="4" fill="none"/>
+        <path d="M-18 14 Q-30 18 -20 30" stroke="#8a9096" stroke-width="3" fill="none"/>
+      </g>
+      <!-- ince belli çay bardakları -->
+      ${[-56, -36, 28, 48].map((x, i) => `
+        <g transform="translate(${x} ${i % 2 ? 8 : 2})">
+          <ellipse cx="0" cy="12" rx="9" ry="3" fill="#f4f1ec" stroke="#b8b0a4"/>
+          <path d="M-6 -10 Q-2 0 -5 10 L5 10 Q2 0 6 -10 Z" fill="#b5401f" stroke="#7a2a12" stroke-width="1" opacity=".9"/>
+        </g>`).join("")}
+      <!-- şehre özgü ikram -->
+      ${CITY.tray}
+    </g>
+
+    <g id="people"></g>
+  `;
+}
+
+function avatarSvg(p) {
+  const s = SEATS[p.seat];
+  return `
+    <g class="avatar" transform="translate(${s.x} ${s.y})">
+      <ellipse cx="0" cy="20" rx="26" ry="6" fill="#000" opacity=".18"/>
+      <path d="M-22 18 Q-24 -8 0 -10 Q24 -8 22 18 Z" fill="${p.color}" ${p.me ? 'stroke="#fff" stroke-width="3"' : ""}/>
+      <circle cx="0" cy="-24" r="15" fill="${p.skin}" ${p.me ? 'stroke="#fff" stroke-width="3"' : ""}/>
+      <path d="M-15 -27 Q0 -46 15 -27 Q8 -34 0 -34 Q-8 -34 -15 -27 Z" fill="#3b2a1e" opacity=".85"/>
+      <circle cx="-5" cy="-23" r="1.8" fill="#3b2a1e"/><circle cx="5" cy="-23" r="1.8" fill="#3b2a1e"/>
+      <path d="M-5 -17 Q0 -13 5 -17" stroke="#3b2a1e" stroke-width="1.6" fill="none"/>
+    </g>`;
+}
+
+function renderPeople() {
+  document.getElementById("people").innerHTML = people.map(avatarSvg).join("");
+  const ov = $("overlay");
+  ov.querySelectorAll(".nametag, .empty-seat").forEach(e => e.remove());
+  const taken = new Set(people.map(p => p.seat));
+  SEATS.forEach((s, i) => {
+    if (taken.has(i)) return;
+    const e = document.createElement("div");
+    e.className = "empty-seat";
+    e.style.left = pct(s.x, W); e.style.top = pct(s.y + 22, H);
+    e.onclick = () => moveMe(i);
+    ov.appendChild(e);
+  });
+  people.forEach(p => {
+    const s = SEATS[p.seat];
+    const t = document.createElement("div");
+    t.className = "nametag" + (p.me ? " me" : "");
+    t.textContent = p.me ? p.name + " (sen)" : p.name;
+    t.style.left = pct(s.x, W); t.style.top = pct(s.y + s.tag, H);
+    t.style.borderColor = p.color;
+    if (!p.me) t.onclick = ev => { ev.stopPropagation(); openMenu(p); };
+    ov.appendChild(t);
+  });
+  $("seatCount").textContent = `${people.length}/${CAPACITY} kişi`;
+  room.n = people.length;
+}
+
+/* ================= Konuşma balonları ================= */
+const bubbles = {};
+function showBubble(p, text, typing = false) {
+  const ov = $("overlay");
+  if (bubbles[p.id]) { bubbles[p.id].remove(); clearTimeout(bubbles[p.id]._t); }
+  const s = SEATS[p.seat];
+  const b = document.createElement("div");
+  b.className = "bubble" + (typing ? " typing" : "") + (s.x < 200 ? " left" : s.x > 600 ? " right" : "");
+  b.textContent = typing ? "•••" : text;
+  b.style.left = pct(s.x, W); b.style.top = pct(s.y - 44, H);
+  ov.appendChild(b);
+  bubbles[p.id] = b;
+  if (!typing) {
+    b._t = setTimeout(() => { b.classList.add("fade"); setTimeout(() => b.remove(), 600); }, 4500);
+  }
+}
+function clearBubble(p) { if (bubbles[p.id]) { bubbles[p.id].remove(); delete bubbles[p.id]; } }
+
+/* ================= Sohbet günlüğü ================= */
+function log(html, cls = "msg") {
+  const d = document.createElement("div");
+  d.className = cls;
+  d.innerHTML = html;
+  const l = $("log");
+  l.appendChild(d);
+  l.scrollTop = l.scrollHeight;
+}
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function say(p, text) {
+  showBubble(p, text);
+  log(`<b style="color:${p.color}">${escapeHtml(p.name)}${p.me ? " (sen)" : ""}</b>${escapeHtml(text)}`);
+}
+
+/* ================= Kişiler ================= */
+function freeSeats() { const t = new Set(people.map(p => p.seat)); return SEATS.map((_, i) => i).filter(i => !t.has(i)); }
+function usedNames() { return new Set(people.map(p => p.name)); }
+function newPerson(isMe = false) {
+  const seats = freeSeats();
+  if (!seats.length) return null;
+  const names = NAMES.filter(n => !usedNames().has(n));
+  const used = new Set(people.map(p => p.color));
+  const color = COLORS.find(c => !used.has(c)) || COLORS[0];
+  return {
+    id: idSeq++, name: names[Math.floor(Math.random() * names.length)], color,
+    skin: SKIN[Math.floor(Math.random() * SKIN.length)],
+    seat: seats[Math.floor(Math.random() * seats.length)], me: isMe,
+  };
+}
+function moveMe(seat) {
+  closeMenu();
+  clearBubble(me);
+  me.seat = seat;
+  renderPeople();
+  log(`${escapeHtml(me.name)} yer değiştirdi.`, "msg sys");
+}
+
+/* ================= Menü: çay ikram et / gizle / bildir ================= */
+let menuEl = null;
+function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
+function openMenu(p) {
+  closeMenu();
+  const s = SEATS[p.seat];
+  menuEl = document.createElement("div");
+  menuEl.className = "menu";
+  menuEl.style.left = pct(s.x, W); menuEl.style.top = pct(s.y + 50, H);
+  menuEl.innerHTML = `<button data-a="tea">☕ Çay ikram et</button><button data-a="hide">🙈 Bu kişiyi gizle</button><button data-a="report">🚩 Bildir</button>`;
+  menuEl.onclick = ev => {
+    const a = ev.target.dataset.a;
+    if (a === "tea") offerTea(p);
+    if (a === "hide") log(`${escapeHtml(p.name)} senin ekranında gizlendi (prototip).`, "msg sys");
+    if (a === "report") log(`${escapeHtml(p.name)} bildirildi. Teşekkürler, moderatörler inceleyecek.`, "msg sys");
+    closeMenu();
+  };
+  $("overlay").appendChild(menuEl);
+}
+function offerTea(to, from = me) {
+  const a = SEATS[from.seat], b = SEATS[to.seat];
+  const t = document.createElement("div");
+  t.className = "tea-fly"; t.textContent = "🍵";
+  t.style.left = pct(a.x, W); t.style.top = pct(a.y - 20, H);
+  $("overlay").appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => { t.style.left = pct(b.x, W); t.style.top = pct(b.y - 20, H); }));
+  setTimeout(() => t.remove(), 1100);
+  log(`☕ ${escapeHtml(from.name)}, ${escapeHtml(to.name)} için çay koydu.`, "msg sys");
+  if (from.me) setTimeout(() => say(to, ["Eyvallah, sağ ol! ☕", "Çaylar bizden olsun bir dahakine 😄", "Ellerine sağlık"][Math.floor(Math.random() * 3)]), 1500);
+}
+
+/* ================= Odaya giriş / çıkış ================= */
+function enterRoom(r) {
+  room = r;
+  people = []; idSeq = 1;
+  Object.keys(bubbles).forEach(k => bubbles[k].remove());
+  $("overlay").innerHTML = "";
+  $("log").innerHTML = "";
+  drawScene();
+  const others = Math.min(r.n, CAPACITY - 1);
+  for (let i = 0; i < others; i++) people.push(newPerson());
+  me = newPerson(true);
+  people.push(me);
+  $("lobby").style.display = "none";
+  $("room").classList.add("active");
+  $("roomTopic").textContent = r.topic;
+  $("roomMeta").textContent = `${r.cat} · ${CITY.name} · sinide ${CITY.trayName} · 24 saat sonra kapanır`;
+  $("meLine").textContent = `Bu köşede adın: ${me.name}. Bir kişinin adına dokunup ona çay ikram edebilirsin.`;
+  renderPeople();
+  log(`"${escapeHtml(r.topic)}" köşesine oturdun. Konu dışına çıkmamaya ve kurallara uymaya özen göster 🙂`, "msg sys");
+  startBots();
+  $("input").focus();
+}
+function leaveRoom() {
+  stopBots();
+  closeMenu();
+  room.n = Math.max(0, people.length - 1);
+  $("room").classList.remove("active");
+  $("lobby").style.display = "";
+  renderLobby();
+}
+
+/* ================= Simüle edilen diğer kullanıcılar ================= */
+function startBots() {
+  stopBots();
+  const tick = () => {
+    const bots = people.filter(p => !p.me);
+    const r = Math.random();
+    if (r < 0.08 && freeSeats().length) {
+      const p = newPerson();
+      people.push(p); renderPeople();
+      log(`${escapeHtml(p.name)} köşeye oturdu.`, "msg sys");
+    } else if (r < 0.13 && bots.length > 2) {
+      const p = bots[Math.floor(Math.random() * bots.length)];
+      clearBubble(p);
+      people = people.filter(x => x !== p); renderPeople();
+      log(`${escapeHtml(p.name)} köşeden kalktı.`, "msg sys");
+    } else if (r < 0.18 && bots.length > 1) {
+      const a = bots[Math.floor(Math.random() * bots.length)];
+      const others = people.filter(x => x !== a);
+      offerTea(others[Math.floor(Math.random() * others.length)], a);
+    } else if (bots.length) {
+      const p = bots[Math.floor(Math.random() * bots.length)];
+      showBubble(p, "", true);
+      setTimeout(() => {
+        if (!people.includes(p)) return;
+        const lines = room.lines || GENERIC_ROOMS[0].lines;
+        say(p, lines[Math.floor(Math.random() * lines.length)]);
+      }, 1200 + Math.random() * 800);
+    }
+    botTimer = setTimeout(tick, 2600 + Math.random() * 2600);
+  };
+  botTimer = setTimeout(tick, 1200);
+}
+function stopBots() { clearTimeout(botTimer); }
+
+/* ================= Mesaj gönderme ================= */
+function send() {
+  const input = $("input");
+  const text = input.value.trim();
+  if (!text) return;
+  const err = checkMessage(text);
+  if (err) { log("⚠️ " + escapeHtml(err), "msg warn"); return; }
+  say(me, text);
+  input.value = "";
+}
+
+/* ================= Olaylar ================= */
+$("sendBtn").onclick = send;
+$("input").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+$("backBtn").onclick = leaveRoom;
+$("randomBtn").onclick = () => enterRoom(randomRoom());
+$("randomInRoomBtn").onclick = () => { const cur = room.id; leaveRoom(); enterRoom(randomRoom(cur)); };
+$("reportRoomBtn").onclick = () => log("Bu köşe bildirildi. Son 40 mesaj incelenmek üzere kaydedilecek (prototip).", "msg sys");
+$("newRoomBtn").onclick = () => {
+  const topic = prompt("Köşenin konusu ne olsun? (10–100 karakter)");
+  if (!topic) return;
+  const t = topic.trim();
+  if (t.length < 10 || t.length > 100) return alert("Konu 10–100 karakter olmalı.");
+  const err = checkMessage(t);
+  if (err) return alert(err);
+  const r = { id: roomSeq++, cat: "💬 Muhabbet", topic: t, n: 0, lines: GENERIC_ROOMS[0].lines };
+  ROOMS.unshift(r);
+  enterRoom(r);
+};
+document.addEventListener("click", e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); });
+
+$("citySelect").onchange = e => {
+  if ($("room").classList.contains("active")) leaveRoom();
+  setCity(e.target.value);
+  renderLobby();
+};
+setCity("izmir");
+renderLobby();
+</script>
+</body>
+</html>

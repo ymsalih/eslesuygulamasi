@@ -1,0 +1,25 @@
+{
+  "name": "sark-kosesi",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Şehir bazlı, kayıtsız, konulu şark köşelerinde anlık sohbet",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n sunucu,web -c yellow,cyan \"npm run dev --workspace @sark/realtime\" \"npm run dev --workspace @sark/web\"",
+    "dev:web": "npm run dev --workspace @sark/web",
+    "dev:realtime": "npm run dev --workspace @sark/realtime",
+    "build": "npm run build --workspace @sark/realtime && npm run build --workspace @sark/web",
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace @sark/realtime"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}
