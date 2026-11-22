@@ -154,6 +154,19 @@ describe("mesajlar", () => {
     for (let i = 0; i < 5; i++) { await m.sendMessage(session(1), "salak"); now += 2500; }
     expect(await m.sendMessage(session(1), "merhaba")).toMatchObject({ ok: false, reason: "muted" });
   });
+  it("susturmadan önce uyarır, 5. ihlalde susturulduğunu söyler", async () => {
+    const room = m.listRooms("izmir")[0];
+    ok(m.join(session(1), room.id));
+    const results = [];
+    for (let i = 0; i < 5; i++) { results.push(await m.sendMessage(session(1), "salak")); now += 2500; }
+    const errors = results.map((r) => (r.ok ? "" : r.error));
+    expect(errors[0]).not.toContain("Dikkat");
+    expect(errors[1]).not.toContain("Dikkat");
+    expect(errors[2]).toContain("Dikkat: 2 uygunsuz mesaj daha");
+    expect(errors[3]).toContain("Dikkat: 1 uygunsuz mesaj daha");
+    expect(results[4]).toMatchObject({ ok: false, reason: "muted" });
+    expect(errors[4]).toContain("10 dakika yazamazsın");
+  });
   it("reşit olmama ihtimali otomatik ve öncelikli bildirime dönüşür", async () => {
     const room = m.listRooms("izmir")[0];
     ok(m.join(session(1), room.id));
@@ -194,7 +207,10 @@ describe("bildirim ve yaptırım", () => {
       const id = ok(await m.sendMessage(session(1), `mesaj ${k}`)).id;
       for (let i = 2; i <= 4; i++) await m.reportMessage(session(i).sid, id, "harassment");
     }
-    expect(repo.bans).toHaveLength(1);
+    // Oturuma 1 saatlik ban + çerezi silip geri dönmeyi engelleyen IP özeti banı
+    expect(repo.bans).toHaveLength(2);
+    expect(repo.bans[0]).toMatchObject({ sid: session(1).sid, ipHash: null, until: new Date(now + 3600000) });
+    expect(repo.bans[1]).toMatchObject({ sid: null, ipHash: session(1).ipHash, until: new Date(now + 3600000) });
     expect(emitter.kicked).toContain(session(1).sid);
     expect(m.roomOf(session(1).sid)).toBeNull();
   });

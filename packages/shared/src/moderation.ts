@@ -89,6 +89,8 @@ export function tokens(normalized: string): string[] {
 const BLOCK_EXACT = new Set([
   "amk", "amq", "aq", "sik", "pic", "oc", "yarak", "yarrak", "yarram", "pezo", "amcik",
   "gotun", "gotune", "gotunu", "sikik", "sikim", "sikimi",
+  // Kısaltmalar ve yaygın yazım biçimleri
+  "mk", "mq", "skm", "sktr", "pust", "pustt",
 ]);
 
 /*
@@ -101,13 +103,20 @@ const BLOCK_PREFIX = [
   "amina", "amini", "aminak", "amcig", "piclik", "picler", "picin", "kahpe", "kaltak", "pezevenk",
   "ibne", "yavsak", "gavat", "gerizekali", "salak", "aptal", "dangalak", "dalyarak", "yarrag",
   "tasak", "gotveren", "gotlek", "serefsiz", "haysiyetsiz",
+  "orspu", "orosbu", "kahbe", "avradin", "pustluk",
 ];
 
 /** Bu kelimeler yukarıdaki kökleri içerse bile serbesttir. */
 const ALLOW_EXACT = new Set(["amin", "amine", "aminah"]);
 
 /** Kelimeler arasındaki boşluk ve noktalama silindiğinde de aranacak, yalnızca ayırt edici uzun kökler. */
-const SQUASH_STEMS = ["orospu", "siktir", "yarrak", "pezevenk", "gerizekali", "amcik", "aminakoy", "sikerim", "sikeyim"];
+/*
+ * "ananı" tek başına bilinçli olarak engellenmez ("Ananı özledin mi?" masum). Sadece küfürle birleşik hâlleri aranır.
+ */
+const SQUASH_STEMS = [
+  "orospu", "siktir", "yarrak", "pezevenk", "gerizekali", "amcik", "aminakoy", "sikerim", "sikeyim",
+  "ananisik", "ananizisik", "bacinisik", "avradinisik",
+];
 
 function containsProfanity(text: string, extra?: ModerationOptions["extra"]): boolean {
   const n = normalize(text);
