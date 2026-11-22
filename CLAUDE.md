@@ -16,6 +16,7 @@ Proje sahibi yazılımcı değil; açıklamaları **Türkçe**, sade ve adım ad
 - `.env` yoksa `npm run dev` yerel deneme anahtarıyla çalışır; canlı sitede `SESSION_SECRET` zorunludur.
 
 ## Kurallar
+- **GitHub'a proje sahibinden habersiz hiçbir şey gönderme.** Commit, push, birleştirme (merge) ve pull request öncesinde ne değiştiğini anlat ve açıkça onay iste; "gönder" demeden gönderme.
 - Asıl karar sunucudadır: filtre, hız sınırları ve yetki kontrolleri `apps/realtime` içinde kalmalı; istemcideki kontroller sadece anında uyarı içindir.
 - Mesaj içerikleri veritabanına yazılmaz (sadece bildirilen köşelerin kesiti). KVKK ve 5651 gerekçeleri `docs/YASAL_KONTROL_LISTESI.md` içinde.
 - Kullanıcıya görünen tüm metinler Türkçe. Yeni bir il teması `packages/shared/src/themes.ts` içine eklenir.
