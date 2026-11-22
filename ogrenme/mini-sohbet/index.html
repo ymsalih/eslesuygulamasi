@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<h3>Mini sohbet</h3>
+<p>Çevrimiçi: <b id="sayi">0</b></p>
+<ul id="liste"></ul>
+<input id="kutu" placeholder="Bir şey yaz">
+<button id="gonder">Gönder</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io(); // telefonu aç (sunucuya bağlan)
+
+  // Sunucu "sayi" derse: ekrandaki sayıyı değiştir
+  socket.on("sayi", (n) => { sayi.textContent = n; });
+
+  // Sunucu "mesaj" derse: listeye ekle
+  socket.on("mesaj", (m) => {
+    const li = document.createElement("li");
+    li.textContent = m;
+    liste.append(li);
+  });
+
+  // Butona basınca: sunucuya "mesaj" gönder
+  gonder.onclick = () => {
+    socket.emit("mesaj", kutu.value);
+    kutu.value = "";
+  };
+</script>

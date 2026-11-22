@@ -1,0 +1,7 @@
+{
+  "name": "mini-sohbet",
+  "private": true,
+  "description": "Şark Köşesi'nin anlık sohbet mantığını anlamak için 30 satırlık örnek",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "socket.io": "^4.8.0" }
+}
