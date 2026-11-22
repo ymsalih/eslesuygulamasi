@@ -111,8 +111,9 @@ const SQUASH_STEMS = ["orospu", "siktir", "yarrak", "pezevenk", "gerizekali", "a
 
 function containsProfanity(text: string, extra?: ModerationOptions["extra"]): boolean {
   const n = normalize(text);
-  const exact = new Set([...BLOCK_EXACT, ...(extra?.blockExact ?? []).map(normalize)]);
-  const prefixes = [...BLOCK_PREFIX, ...(extra?.blockPrefix ?? []).map(normalize)];
+  // Panelden gelen boş/çok kısa kökler ("" her kelimeyle başlar) bütün mesajları engellemesin
+  const exact = new Set([...BLOCK_EXACT, ...(extra?.blockExact ?? []).map(normalize).filter((w) => w.length >= 2)]);
+  const prefixes = [...BLOCK_PREFIX, ...(extra?.blockPrefix ?? []).map(normalize).filter((w) => w.length >= 3)];
   for (const w of tokens(n)) {
     if (ALLOW_EXACT.has(w)) continue;
     if (exact.has(w)) return true;

@@ -7,7 +7,7 @@ import {
   REPORT_REASONS, SESSION_COOKIE, isValidCitySlug,
   type ClientToServer, type ReportReason, type ServerToClient,
 } from "@sark/shared";
-import { hashIp, readCookie, verifySession } from "@sark/shared/server";
+import { checkRealtimeAdminKey, hashIp, readCookie, verifySession } from "@sark/shared/server";
 import type { Repo } from "./repo";
 import { RoomManager, type Emitter, type SessionInfo } from "./rooms";
 
@@ -24,8 +24,20 @@ export interface RealtimeOptions {
   sessionSecret: string;
   webOrigins: string[];
   trustProxy?: boolean;
+  /** Yönetim panelinin iç uç noktası için anahtar kaynağı. Yoksa /internal/admin kapalıdır. */
+  adminSecret?: string;
   now?: () => number;
 }
+
+/** Yönetim panelinden gelebilecek işlemler. Karar ve doğrulama burada, sunucuda yapılır. */
+export type AdminCommand =
+  | { action: "hide_message"; roomId: string; messageId: string }
+  | { action: "close_room"; roomId: string }
+  | { action: "kick"; sid: string; text?: string }
+  | { action: "reload_words" };
+
+const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const SID_RE = /^[a-f0-9]{32}$/;
 
 export interface Realtime {
   http: HttpServer;
@@ -60,8 +72,60 @@ export function createRealtime(opts: RealtimeOptions): Realtime {
       res.end(JSON.stringify({ total: io.engine.clientsCount, byCity }));
       return;
     }
+    // Yönetim paneli → sunucu: sadece doğru iç anahtarla. Tarayıcılara CORS izni verilmez.
+    if (req.url === "/internal/admin" && opts.adminSecret) {
+      if (req.method !== "POST") return void res.writeHead(405).end();
+      const key = req.headers["x-admin-key"];
+      if (!checkRealtimeAdminKey(typeof key === "string" ? key : undefined, opts.adminSecret)) {
+        return void res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ ok: false, error: "unauthorized" }));
+      }
+      let body = "";
+      let tooBig = false;
+      req.setEncoding("utf8");
+      req.on("data", (chunk: string) => {
+        body += chunk;
+        if (body.length > 4096) { tooBig = true; req.destroy(); }
+      });
+      req.on("end", async () => {
+        if (tooBig) return;
+        let cmd: unknown;
+        try { cmd = JSON.parse(body); } catch { cmd = null; }
+        const out = await runAdminCommand(cmd);
+        res.writeHead(out.ok ? 200 : 400, { "content-type": "application/json", "cache-control": "no-store" });
+        res.end(JSON.stringify(out));
+      });
+      return;
+    }
     res.writeHead(404).end();
   });
+
+  async function runAdminCommand(raw: unknown): Promise<{ ok: true; found: boolean } | { ok: false; error: string }> {
+    const c = (raw ?? {}) as Record<string, unknown>;
+    switch (c.action) {
+      case "hide_message":
+        if (typeof c.roomId !== "string" || !ID_RE.test(c.roomId) || typeof c.messageId !== "string" || !ID_RE.test(c.messageId)) break;
+        return { ok: true, found: manager.hideMessage(c.roomId, c.messageId) };
+      case "close_room":
+        if (typeof c.roomId !== "string" || !ID_RE.test(c.roomId)) break;
+        return { ok: true, found: manager.closeRoom(c.roomId, "moderation") };
+      case "kick": {
+        if (typeof c.sid !== "string" || !SID_RE.test(c.sid)) break;
+        const found = (await io.in(`sid:${c.sid}`).fetchSockets()).length > 0;
+        const text = typeof c.text === "string" && c.text.trim() ? c.text.trim().slice(0, 200) : "Topluluk kurallarını ihlal ettiğin için uzaklaştırıldın.";
+        manager.kick(c.sid, text);
+        return { ok: true, found };
+      }
+      case "reload_words":
+        try {
+          manager.setBannedWords(await opts.repo.bannedWords());
+          return { ok: true, found: true };
+        } catch (e) {
+          console.error("Yasaklı kelimeler okunamadı", e);
+          return { ok: false, error: "words_unavailable" };
+        }
+    }
+    return { ok: false, error: "invalid_command" };
+  }
   const io: IO = new Server(http, {
     cors: { origin: opts.webOrigins, credentials: true },
     maxHttpBufferSize: 16 * 1024,

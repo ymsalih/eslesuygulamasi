@@ -95,3 +95,5 @@ export function decryptIp(value: string, keyHex: string | undefined): string {
   d.setAuthTag(tag);
   return Buffer.concat([d.update(enc), d.final()]).toString("utf8");
 }
+
+export * from "./admin";
