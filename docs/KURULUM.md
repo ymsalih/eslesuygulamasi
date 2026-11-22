@@ -40,12 +40,16 @@ git checkout claude/turkey-city-chat-platform-3om5tp
 npm install
 ```
 
-## 4. Ayar dosyasını oluştur (bir kere)
+## 4. Ayar dosyası (isteğe bağlı)
 
+Bilgisayarında denerken **bu adımı atlayabilirsin**. `.env` dosyası yoksa site kendi deneme anahtarıyla çalışır
+(terminalde "yerel deneme anahtarı kullanılıyor" yazar, bu normaldir).
+
+Ayarları değiştirmek istersen:
 - **Windows (PowerShell):** `copy .env.example .env`
 - **Mac:** `cp .env.example .env`
 
-Bilgisayarında denerken bu dosyada bir şey değiştirmen gerekmez. (Canlı sitede gizli anahtarlar mutlaka değiştirilir.)
+> Dosyanın adı tam olarak `.env` olmalı. Not defteriyle oluşturursan `.env.txt` olarak kaydedilebilir; site bunu fark edip terminalde uyarır.
 
 ## 5. Siteyi başlat
 
@@ -93,6 +97,27 @@ Varsayılan olarak onay kayıtları, bildirimler ve trafik logları **geçici ol
 |---|---|
 | `node` veya `npm` tanınmıyor | Node.js'i kurduktan sonra terminali kapatıp yeniden aç |
 | `port 3000 already in use` | Başka bir program o portu kullanıyor. Açık kalan eski terminali kapat veya bilgisayarı yeniden başlat |
-| Köşelere girince "Sohbet sunucusuna bağlanılamadı" | Terminalde `[sunucu]` satırlarında hata var mı bak. `.env` dosyasının oluşturulduğundan emin ol |
+| Köşelere girince "Sohbet sunucusuna bağlanılamadı" | Terminalde `[sunucu]` satırlarında hata var mı bak. Sohbet sunucusu açılmamış olabilir |
+| "Sunucu yapılandırması eksik" | Kodun eski sürümü. `git pull` ile güncelle, `npm run dev`'i durdurup (`Ctrl + C`) yeniden başlat |
 | Ana sayfaya geri atıyor | Onay çerezi yok veya silinmiş; onay ekranını tekrar doldur |
 | `DATABASE_URL` hatası | Docker çalışmıyorsa `.env` içindeki `DATABASE_URL` satırının başına tekrar `#` koy |
+
+## Kodun en son halini almak
+
+Claude bir değişiklik yaptığında GitHub'a gönderir. Kendi bilgisayarına almak için proje klasöründe:
+
+```
+git pull
+npm install
+npm run dev
+```
+
+## Claude'u kendi bilgisayarında kullanmak
+
+Bu projeyi Claude ile doğrudan kendi bilgisayarındaki klasör üzerinden de geliştirebilirsin:
+
+- **Claude masaüstü uygulaması:** Uygulamadaki Code bölümünden proje klasörünü (`eslesuygulamasi`) seç ve yazışmaya başla.
+- **Terminal:** Bir kere `npm install -g @anthropic-ai/claude-code` ile kur. Sonra proje klasöründe `claude` yaz, Claude hesabınla giriş yap.
+
+Claude açılınca proje klasöründeki `CLAUDE.md` dosyasını okur ve projeyi tanır. Sonra ona Türkçe yazman yeterli:
+"Siteyi başlat", "Müziği biraz kıs", "Değişiklikleri GitHub'a gönder" gibi.

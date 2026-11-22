@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { PRIVACY_VERSION, SESSION_COOKIE, TERMS_VERSION } from "@sark/shared";
 import { SESSION_MAX_AGE_MS, hashIp, newSessionId, signSession } from "@sark/shared/server";
 import { clientIp, db } from "@/lib/db";
+import { sessionSecret } from "@/lib/secret";
 
 export const runtime = "nodejs";
 
@@ -19,8 +20,11 @@ function cookieOptions(maxAgeSec: number) {
 
 /** Onay: 18 yaş beyanı + Kullanım Koşulları + Aydınlatma Metni (zorunlu), analitik çerez (isteğe bağlı). */
 export async function POST(req: Request) {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) return NextResponse.json({ error: "Sunucu yapılandırması eksik." }, { status: 500 });
+  const secret = sessionSecret();
+  if (!secret || secret.length < 32) {
+    console.error("SESSION_SECRET bulunamadı: proje klasöründe .env dosyası olmalı (bkz. .env.example).");
+    return NextResponse.json({ error: "Sunucu yapılandırması eksik (SESSION_SECRET). Proje klasöründe .env dosyası olmalı." }, { status: 500 });
+  }
   const body = (await req.json().catch(() => null)) as { age?: unknown; terms?: unknown; privacy?: unknown; analytics?: unknown } | null;
   if (!body || body.age !== true || body.terms !== true || body.privacy !== true) {
     return NextResponse.json({ error: "Devam etmek için zorunlu onayları vermelisin." }, { status: 400 });

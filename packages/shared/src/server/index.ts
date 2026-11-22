@@ -17,6 +17,12 @@ export interface SessionPayload {
   iat: number;
 }
 
+/**
+ * Sadece bilgisayarda denerken (.env yoksa) kullanılan sabit anahtar.
+ * Canlı sitede (NODE_ENV=production) ASLA kullanılmaz; orada SESSION_SECRET zorunludur.
+ */
+export const DEV_SESSION_SECRET = "yerel-gelistirme-anahtari-canli-sitede-kullanilmaz";
+
 /** Oturum token'ının geçerlilik süresi: 30 gün. Sonra onay yeniden alınır. */
 export const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 

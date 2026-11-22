@@ -3,9 +3,10 @@ import { MemoryRepo, PgRepo, type Repo } from "./repo";
 import { createRealtime } from "./server";
 
 if (!config.sessionSecret || config.sessionSecret.length < 32) {
-  console.error("SESSION_SECRET tanımlı değil veya 32 karakterden kısa. .env.example dosyasına bakın.");
+  console.error("SESSION_SECRET tanımlı değil veya 32 karakterden kısa. Proje klasöründe .env dosyası olmalı (bkz. .env.example).");
   process.exit(1);
 }
+if (config.usingDevSecret) console.warn("BİLGİ: .env bulunamadı, yerel deneme anahtarı kullanılıyor (sadece bilgisayarda denemek için).");
 
 let repo: Repo;
 if (config.databaseUrl) {
